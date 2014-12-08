@@ -149,7 +149,10 @@ class Generator extends \yii\gii\Generator{
                 );
             }
             $i++;
+
+            /**Костыль.. иначе gii глючит при попытке просмотра **/
             $migrationName='m' . gmdate('ymd_Hi'.$i) . '_Relations';
+            //$migrationName='m' . gmdate('ymd_His') . '_Relations';
             $params=['tableRelations'=>$tableRelations,'migrationName'=>$migrationName];
             $files[] = new CodeFile(
                 Yii::getAlias($this->migrationPath) . '/' . $migrationName . '.php',
@@ -167,7 +170,8 @@ class Generator extends \yii\gii\Generator{
                 $tableList[]=['alias'=>$tableAlias,'indexes'=>$tableIndexes,'columns'=>$tableColumns,'name'=>$tableName];
             }
             $i++;
-            $migrationName='m' . gmdate('ymd_Hi'.$i) . '_Mass';
+            $migrationName='m' . gmdate('ymd_His') . '_Mass';
+            //$migrationName='m' . gmdate('ymd_Hi'.$i) . '_Mass';
             $params=['tableList'=>$tableList,'tableRelations'=>$tableRelations,'migrationName'=>$migrationName];
             $files[] = new CodeFile(
                 Yii::getAlias($this->migrationPath) . '/' . $migrationName . '.php',
@@ -257,6 +261,9 @@ class Generator extends \yii\gii\Generator{
     public function generatePure($tableName){
         $query=Yii::$app->db->createCommand('SHOW CREATE TABLE '.$tableName)->queryOne();
         return isset($query['Create Table'])?:'';
+        /**
+         * @TODO
+        **/
     }
 
     public function getTableCaption($tableName){
