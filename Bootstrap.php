@@ -18,9 +18,6 @@ class Bootstrap implements BootstrapInterface
             if (!isset($app->getModule('gii')->generators['migrik'])) {
                 $app->getModule('gii')->generators['migrik'] = 'insolita\migrik\gii\Generator';
             }
-            if ($app instanceof \yii\console\Application) {
-                $app->controllerMap['migrik-cmd'] = 'insolita\migrik\cmd\MigrikController';
-            }
         }
     }
 }

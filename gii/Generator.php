@@ -9,15 +9,21 @@ namespace insolita\migrik\gii;
 
 use yii\db\Connection;
 use Yii;
+use yii\db\Expression;
+use yii\db\Schema;
 use yii\gii\CodeFile;
-use yii\helpers\VarDumper;
+use yii\db\TableSchema;
 
 class Generator extends \yii\gii\Generator{
+
 
     public $db = 'db';
     public $migrationPath = '@app/migrations';
     public $tableName;
+    public $tableIgnore;
+    public $genmode='schema';
     public $usePrefix=true;
+    public $tableOptions='ENGINE=InnoDB';
 
     /**
      * @inheritdoc
@@ -41,14 +47,17 @@ class Generator extends \yii\gii\Generator{
     public function rules()
     {
         return array_merge(parent::rules(), [
-                [['db', 'tableName'], 'filter', 'filter' => 'trim'],
+                [['db', 'tableName','tableIgnore'], 'filter', 'filter' => 'trim'],
                 [['db','tableName'], 'required'],
                 [['db'], 'match', 'pattern' => '/^\w+$/', 'message' => 'Only word characters are allowed.'],
-                [['tableName'], 'match', 'pattern' => '/^(\w+_)?([\w\*]+)$/', 'message' => 'Only word characters, underscore, and optionally an asterisk are allowed.'],
+                [['tableName'], 'match', 'pattern' => '/^(\w+_,)?([\w\*_,]+)$/', 'message' => 'Only word characters, underscore, comma,and optionally an asterisk are allowed.'],
+                [['tableIgnore'], 'match', 'pattern' => '/^(\w+_)?([\w_,]+)$/', 'message' => 'Only word characters, underscore,and  comma  are allowed.'],
                 [['db'], 'validateDb'],
                 [['tableName'], 'validateTableName'],
                 ['migrationPath', 'safe'],
+                ['tableOptions', 'safe'],
                 [['usePrefix'], 'boolean'],
+                [['genmode'],'in','range'=>['single','mass']],
             ]);
     }
     /**
@@ -59,8 +68,11 @@ class Generator extends \yii\gii\Generator{
         return array_merge(parent::attributeLabels(), [
                 'db' => 'Database Connection ID',
                 'tableName' => 'Table Name',
+                'tableIgnore' => 'Ignored tables',
                 'migrationPath' => 'Migration Path',
-                'usePrefix'=>'Replace table prefix'
+                'usePrefix'=>'Replace table prefix',
+                'genmode'=>'Generation Mode',
+                'tableOptions'=>'Table Options'
             ]);
     }
 
@@ -71,9 +83,12 @@ class Generator extends \yii\gii\Generator{
     {
         return array_merge(parent::hints(), [
                 'db' => 'This is the ID of the DB application component.',
-                'tableName' => 'Name of the DB table',
+                'tableName' => 'Use "*" for all table, mask support - as "tablepart*", or you can separate table names by comma ',
+                'tableIgnore' => 'You can separate some table names by comma, for ignor ',
                 'migrationPath' => 'Path for save migration file',
-                'usePrefix'=>'Use Table Prefix Replacer eg.{{%tablename}} instead of prefix_tablename'
+                'usePrefix'=>'Use Table Prefix Replacer eg.{{%tablename}} instead of prefix_tablename',
+                'genmode'=>'All tables in separated files, or all in one file',
+                'tableOptions'=>'Table Options'
             ]);
     }
 
@@ -99,7 +114,7 @@ class Generator extends \yii\gii\Generator{
      */
     public function requiredTemplates()
     {
-        return ['migration.php'];
+        return ['migration.php','relation.php','mass.php'];
     }
 
     /**
@@ -107,43 +122,141 @@ class Generator extends \yii\gii\Generator{
      */
     public function stickyAttributes()
     {
-        return array_merge(parent::stickyAttributes(), ['db']);
+        return array_merge(parent::stickyAttributes(), ['db','migrationPath','usePrefix','tableOptions','tableIgnore']);
     }
 
     /**
      * @inheritdoc
      */
     public function generate(){
-        $files = [];
+        $files =$tableRelations=$tableList= [];
         $db = $this->getDbConnection();
-        foreach ($this->getTableNames() as $tableName) {
-            $tableSchema = $db->getTableSchema($tableName);
-            $tableCaption=$this->getTableCaption($tableName);
-            $tableAlias=$this->getTableAlias($tableCaption);
-            $tableColumns=$this->generateColumns($tableSchema);
-            $tableRelations=$this->generateRelations($tableSchema);
-            $tableIndexes=$this->generateIndexes($tableSchema);
-            $migrationName='m' . gmdate('ymd_His') . '_' .$tableCaption;
-            $params=compact('tableName','tableSchema','tableCaption','tableAlias','tableColumns','tableRelations','tableIndexes');
+        $i=10;
+        if($this->genmode=='single'){
+            foreach ($this->getTableNames() as $tableName) {
+                $i++;
+                $tableSchema = $db->getTableSchema($tableName);
+                $tableCaption=$this->getTableCaption($tableName);
+                $tableAlias=$this->getTableAlias($tableCaption);
+                $tableIndexes=$this->genmode=='schema'?null:$this->generateIndexes($tableName);
+                $tableColumns=$this->columnsBySchema($tableSchema);
+                $tableRelations[]=['fKeys'=>$this->generateRelations($tableSchema),'tableAlias'=>$tableAlias,'tableName'=>$tableName];
+                $migrationName='m' . gmdate('ymd_Hi'.$i) . '_' .$tableCaption;
+                $params=compact('tableName','tableSchema','tableCaption','tableAlias','migrationName','tableColumns','tableIndexes');
+                $files[] = new CodeFile(
+                    Yii::getAlias($this->migrationPath) . '/' . $migrationName . '.php',
+                    $this->render('migration.php', $params)
+                );
+            }
+            $i++;
+            $migrationName='m' . gmdate('ymd_Hi'.$i) . '_Relations';
+            $params=['tableRelations'=>$tableRelations,'migrationName'=>$migrationName];
             $files[] = new CodeFile(
                 Yii::getAlias($this->migrationPath) . '/' . $migrationName . '.php',
-                $this->render('migration.php', $params)
+                $this->render('relation.php', $params)
+            );
+        }else{
+            foreach ($this->getTableNames() as $tableName) {
+                $i++;
+                $tableSchema = $db->getTableSchema($tableName);
+                $tableCaption=$this->getTableCaption($tableName);
+                $tableAlias=$this->getTableAlias($tableCaption);
+                $tableIndexes=$this->generateIndexes($tableName);
+                $tableColumns=$this->columnsBySchema($tableSchema);
+                $tableRelations[]=['fKeys'=>$this->generateRelations($tableSchema),'tableAlias'=>$tableAlias,'tableName'=>$tableName];
+                $tableList[]=['alias'=>$tableAlias,'indexes'=>$tableIndexes,'columns'=>$tableColumns,'name'=>$tableName];
+            }
+            $i++;
+            $migrationName='m' . gmdate('ymd_Hi'.$i) . '_Mass';
+            $params=['tableList'=>$tableList,'tableRelations'=>$tableRelations,'migrationName'=>$migrationName];
+            $files[] = new CodeFile(
+                Yii::getAlias($this->migrationPath) . '/' . $migrationName . '.php',
+                $this->render('mass.php', $params)
             );
         }
 
-        return $files;
+
+         return $files;
     }
 
-    public function generateColumns($schema){
-        VarDumper::dump($schema,10,true);
-        Yii::$app->end();
-        return '';
+
+
+    public function columnsBySchema($schema){
+        $cols=[];
+        /**@var TableSchema $schema**/
+        foreach($schema->columns as $column){
+            $type=$this->getColumnType($column);
+            $cols[$column->name]=$type;
+        }
+        return $cols;
     }
+
+
+    public function getColumnType($col){
+        $coldata=$append='';
+        /**@var \yii\db\ColumnSchema $col**/
+        if($col->autoIncrement){
+            $coldata = $col->type!==Schema::TYPE_BIGINT?'Schema::TYPE_PK':'Schema::TYPE_BIGPK';
+        }elseif(strpos($col->dbType,'set(')!==false){
+            $coldata ='"'.$col->dbType.'"';
+        }elseif(strpos($col->dbType,'enum(')!==false){
+            $coldata ='"'.$col->dbType.'"';
+        }elseif($col->dbType === 'tinyint(1)'){
+            $coldata ='Schema::TYPE_BOOLEAN';
+        }else{
+            $coldata='Schema::TYPE_'.strtoupper($col->type);
+        }
+
+        if($col->size && !$col->autoIncrement){
+            $append.=($col->scale)?'('.$col->size.','.$col->scale.')':'('.$col->size.')';
+        }
+        $append.=(!$col->allowNull && !$col->autoIncrement)?' NOT NULL':'';
+        $append.=($col->unsigned && !$col->autoIncrement)?' unsigned':'';
+
+        if(!is_null($col->defaultValue)){
+            $append.=' DEFAULT '.($col->defaultValue instanceof Expression?$col->defaultValue->expression:'"'.$col->defaultValue.'"');
+        }
+        if(!empty($col->comment)){
+            $append.=' COMMENT "'.$col->comment.'"';
+        }
+
+        return $coldata.".'".$append."'";
+    }
+
     public function generateRelations($schema){
-        return '';
+        /**@var TableSchema $schema**/
+        $rels=[];
+        if(!empty($schema->foreignKeys)){
+            foreach($schema->foreignKeys as $i=>$constraint){
+                foreach($constraint as $pk=>$fk){
+                    if(!$pk){
+                      $rels[$i]['ftable']=$fk;
+                    }else{
+                        $rels[$i]['pk']=$pk;
+                        $rels[$i]['fk']=$fk;
+                    }
+                }
+            }
+        }
+        //return [VarDumper::dumpAsString($schema->foreignKeys)];
+        return $rels;
     }
-    public function generateIndexes($schema){
-        return '';
+    public function generateIndexes($tableName){
+        $indexes=[];
+        $query=Yii::$app->db->createCommand('SHOW INDEX FROM '.$tableName)->queryAll();
+        if($query){
+            foreach($query as $i=>$index){
+                $indexes[$index['Key_name']]['cols'][$index['Seq_in_index']]=$index['Column_name'];
+                $indexes[$index['Key_name']]['isuniq']=($index['Non_unique']==1)?0:1;
+            }
+        }
+
+        return $indexes;
+    }
+
+    public function generatePure($tableName){
+        $query=Yii::$app->db->createCommand('SHOW CREATE TABLE '.$tableName)->queryOne();
+        return isset($query['Create Table'])?:'';
     }
 
     public function getTableCaption($tableName){
@@ -172,14 +285,20 @@ class Generator extends \yii\gii\Generator{
      */
     public function validateTableName()
     {
-        if (strpos($this->tableName, '*') !== false && substr($this->tableName, -1) !== '*') {
-            $this->addError('tableName', 'Asterisk is not allowed as the last character.');
+        if (strpos($this->tableName, '*') !== false && substr($this->tableName, -1) !== '*' && $this->tableName!=='*') {
+            $this->addError('tableName', 'Asterisk is not allowed as the first character.');
+
+            return;
+        }
+        if (strpos($this->tableName, '*') !== false && strpos($this->tableName, ',') !== false) {
+            $this->addError('tableName', 'You can choose only one - use asteriks for mask or separate tables by comma.');
 
             return;
         }
         $tables = $this->getTableNames();
+
         if (empty($tables)) {
-            $this->addError('tableName', "Table '{$this->tableName}' does not exist.");
+            $this->addError('tableName', "Table '{$this->tableName}' does not exist, or all tables was ignored");
         }
     }
     private $_tableNames;
@@ -197,17 +316,40 @@ class Generator extends \yii\gii\Generator{
             return [];
         }
         $tableNames = [];
-        if (strpos($this->tableName, '*') !== false) {
+        $ignors=[];
+        if($this->tableIgnore){
+            if(strpos($this->tableIgnore, ',') !== false){
+                $ignors=explode(',',$this->tableIgnore);
+            }else{
+                $ignors[]=$this->tableIgnore;
+            }
+        }
+        if($this->tableName=='*'){
+            foreach ($db->schema->getTableNames() as $table) {
+                if(!in_array($table,$ignors)){
+                    $tableNames[] = $table;
+                }
+            }
+        }elseif (strpos($this->tableName, '*') !== false) {
             $schema = '';
             $pattern = '/^' . str_replace('*', '\w+', $this->tableName) . '$/';
 
             foreach ($db->schema->getTableNames($schema) as $table) {
-                if (preg_match($pattern, $table)) {
+                if (preg_match($pattern, $table) && !in_array($table,$ignors)) {
+                    $tableNames[] = $table;
+                }
+            }
+        }elseif(strpos($this->tableName, ',') !== false){
+            $exploded=explode(',',$this->tableName);
+            foreach ($db->schema->getTableNames() as $table) {
+                if (in_array($table,$exploded) && !in_array($table,$ignors)) {
                     $tableNames[] = $table;
                 }
             }
         } elseif (($table = $db->getTableSchema($this->tableName, true)) !== null) {
-            $tableNames[] = $this->tableName;
+            if(!in_array($this->tableName,$ignors)){
+                $tableNames[] = $this->tableName;
+            }
         }
 
         return $this->_tableNames = $tableNames;
