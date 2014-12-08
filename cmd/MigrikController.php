@@ -5,7 +5,7 @@
  * Date: 08.12.14
  * Time: 7:24
  */
-namespace insolita\migrik;
+namespace insolita\migrik\cmd;
 
 
 use Yii;
