@@ -1,6 +1,6 @@
 Migration Generator From Mysql database
 =======================================
-try make it
+generate migration files (not dumps!) with indexes, and foreign keys, for one table, comma separated list of tables,  by part of table name, for all tables by *
 
 Installation
 ------------
@@ -22,10 +22,10 @@ or add
 to the require section of your `composer.json` file.
 
 
-Usage
+Usage (MYSQL ONLY)
 -----
 
-Once the extension is installed, simply use it in your code by  :
+Once the extension is installed, go to Gii and use it, and also create own templates - [see more](http://www.yiiframework.com/doc-2.0/guide-tool-gii).html#creating-your-own-templates :
 
 ```php
 <?= \insolita\migrik\AutoloadExample::widget(); ?>```
