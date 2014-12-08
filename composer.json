@@ -10,15 +10,18 @@
             "email": "donnainsolita@gmail.com"
         }
     ],
+	"autoload": {
+		"psr-4": {
+			"insolita\\migrik\\": ""
+		}
+	},
     "require": {
         "yiisoft/yii2": "*"
     },
+	"require-dev": {
+		"yiisoft/yii2-gii": "*"
+	},
 	"extra": {
 		"bootstrap": "insolita\\migrik\\Bootstrap"
-	},
-	"autoload": {
-        "psr-4": {
-            "insolita\\migrik\\": ""
-        }
-    }
+	}
 }
