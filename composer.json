@@ -13,7 +13,10 @@
     "require": {
         "yiisoft/yii2": "*"
     },
-    "autoload": {
+	"extra": {
+		"bootstrap": "insolita\\migrik\\Bootstrap"
+	},
+	"autoload": {
         "psr-4": {
             "insolita\\migrik\\": ""
         }
