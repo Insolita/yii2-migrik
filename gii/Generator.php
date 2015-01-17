@@ -25,6 +25,9 @@ class Generator extends \yii\gii\Generator{
     public $usePrefix=true;
     public $tableOptions='ENGINE=InnoDB';
 
+    private $_ignoredTables = [];
+    private $_tables = [];
+
     /**
      * @inheritdoc
      */
@@ -50,8 +53,10 @@ class Generator extends \yii\gii\Generator{
                 [['db', 'tableName','tableIgnore'], 'filter', 'filter' => 'trim'],
                 [['db','tableName'], 'required'],
                 [['db'], 'match', 'pattern' => '/^\w+$/', 'message' => 'Only word characters are allowed.'],
-                [['tableName'], 'match', 'pattern' => '/^(\w+_,)?([\w\*_,]+)$/', 'message' => 'Only word characters, underscore, comma,and optionally an asterisk are allowed.'],
-                [['tableIgnore'], 'match', 'pattern' => '/^(\w+_)?([\w_,]+)$/', 'message' => 'Only word characters, underscore,and  comma  are allowed.'],
+                [
+                    ['tableName','tableIgnore'], 'match', 'pattern' =>'/[^\w\*_\,\-\s]/','not'=>true,
+                    'message' => 'Only word characters, underscore, comma,and optionally an asterisk are allowed.'
+                ],
                 [['db'], 'validateDb'],
                 [['tableName'], 'validateTableName'],
                 ['migrationPath', 'safe'],
@@ -124,7 +129,15 @@ class Generator extends \yii\gii\Generator{
     {
         return array_merge(parent::stickyAttributes(), ['db','migrationPath','usePrefix','tableOptions','tableIgnore']);
     }
+    public function getIgnoredTables()
+    {
+        return $this->_ignoredTables;
+    }
 
+    public function getTables()
+    {
+        return $this->_tables;
+    }
     /**
      * @inheritdoc
      */
@@ -133,7 +146,7 @@ class Generator extends \yii\gii\Generator{
         $db = $this->getDbConnection();
         $i=10;
         if($this->genmode=='single'){
-            foreach ($this->getTableNames() as $tableName) {
+            foreach ($this->getTables() as $tableName) {
                 $i++;
                 $tableSchema = $db->getTableSchema($tableName);
                 $tableCaption=$this->getTableCaption($tableName);
@@ -292,74 +305,96 @@ class Generator extends \yii\gii\Generator{
      */
     public function validateTableName()
     {
-        if (strpos($this->tableName, '*') !== false && substr($this->tableName, -1) !== '*' && $this->tableName!=='*') {
-            $this->addError('tableName', 'Asterisk is not allowed as the first character.');
-
-            return;
-        }
-        if (strpos($this->tableName, '*') !== false && strpos($this->tableName, ',') !== false) {
-            $this->addError('tableName', 'You can choose only one - use asteriks for mask or separate tables by comma.');
-
-            return;
-        }
-        $tables = $this->getTableNames();
+        $tables=$this->prepareTables();
 
         if (empty($tables)) {
             $this->addError('tableName', "Table '{$this->tableName}' does not exist, or all tables was ignored");
+            return false;
         }
+        return true;
     }
-    private $_tableNames;
 
     /**
      * @return array the table names that match the pattern specified by [[tableName]].
      */
-    protected function getTableNames()
+    public function prepareIgnored()
     {
-        if ($this->_tableNames !== null) {
-            return $this->_tableNames;
+        $ignors = [];
+        if ($this->tableIgnore) {
+            if (strpos($this->tableIgnore, ',') !== false) {
+                $ignors = explode(',', $this->tableIgnore);
+            } else {
+                $ignors[] = $this->tableIgnore;
+            }
         }
+        if (!empty($ignors)) {
+            foreach ($ignors as $ignoredTable) {
+                $prepared = $this->prepareTableName($ignoredTable);
+                if (!empty($prepared)) {
+                    $this->_ignoredTables=array_merge($this->_ignoredTables, $prepared);
+                }
+            }
+        }
+        return $this->_ignoredTables;
+    }
+
+    public function prepareTableName($tableName)
+    {
+        $prepared = [];
+        $tableName=trim($tableName);
         $db = $this->getDbConnection();
         if ($db === null) {
-            return [];
+            return $prepared;
         }
-        $tableNames = [];
-        $ignors=[];
-        if($this->tableIgnore){
-            if(strpos($this->tableIgnore, ',') !== false){
-                $ignors=explode(',',$this->tableIgnore);
-            }else{
-                $ignors[]=$this->tableIgnore;
-            }
-        }
-        if($this->tableName=='*'){
+        if ($tableName == '*') {
             foreach ($db->schema->getTableNames() as $table) {
-                if(!in_array($table,$ignors)){
-                    $tableNames[] = $table;
-                }
+                $prepared[] = $table;
             }
-        }elseif (strpos($this->tableName, '*') !== false) {
+        } elseif (strpos($tableName, '*') !== false) {
             $schema = '';
-            $pattern = '/^' . str_replace('*', '\w+', $this->tableName) . '$/';
+            $pattern = '/^' . str_replace('*', '\w+', $tableName) . '$/';
 
             foreach ($db->schema->getTableNames($schema) as $table) {
-                if (preg_match($pattern, $table) && !in_array($table,$ignors)) {
-                    $tableNames[] = $table;
+                if (preg_match($pattern, $table)) {
+                    $prepared[] = $table;
                 }
             }
-        }elseif(strpos($this->tableName, ',') !== false){
-            $exploded=explode(',',$this->tableName);
-            foreach ($db->schema->getTableNames() as $table) {
-                if (in_array($table,$exploded) && !in_array($table,$ignors)) {
-                    $tableNames[] = $table;
+        } elseif (($table = $db->getTableSchema($tableName, true)) !== null) {
+            $prepared[] = $tableName;
+        }
+        return $prepared;
+    }
+
+
+    /**
+     * @return array the table names that match the pattern specified by [[tableName]].
+     */
+    public function prepareTables()
+    {
+        $tables = [];
+        $this->prepareIgnored();
+        if ($this->tableName) {
+            if (strpos($this->tableName, ',') !== false) {
+                $tables = explode(',', $this->tableName);
+            } else {
+                $tables[] = $this->tableName;
+            }
+        }
+        if (!empty($tables)) {
+            foreach ($tables as $goodTable) {
+                $prepared = $this->prepareTableName($goodTable);
+                if (!empty($prepared)) {
+                    $this->_tables=array_merge($this->_tables, $prepared);
                 }
             }
-        } elseif (($table = $db->getTableSchema($this->tableName, true)) !== null) {
-            if(!in_array($this->tableName,$ignors)){
-                $tableNames[] = $this->tableName;
+            foreach($this->_tables as $i=>$t){
+                if(in_array($t, $this->_ignoredTables)){
+                    unset($this->_tables[$i]);
+                }
             }
         }
 
-        return $this->_tableNames = $tableNames;
+        return $this->_tables;
     }
 
 
