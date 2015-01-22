@@ -13,6 +13,7 @@ use yii\db\Expression;
 use yii\db\Schema;
 use yii\gii\CodeFile;
 use yii\db\TableSchema;
+set_time_limit(0);
 
 class Generator extends \yii\gii\Generator{
 
@@ -21,7 +22,7 @@ class Generator extends \yii\gii\Generator{
     public $migrationPath = '@app/migrations';
     public $tableName;
     public $tableIgnore;
-    public $genmode='schema';
+    public $genmode='single';
     public $usePrefix=true;
     public $tableOptions='ENGINE=InnoDB';
 
@@ -183,8 +184,8 @@ class Generator extends \yii\gii\Generator{
                 $tableList[]=['alias'=>$tableAlias,'indexes'=>$tableIndexes,'columns'=>$tableColumns,'name'=>$tableName];
             }
             $i++;
-            $migrationName='m' . gmdate('ymd_His') . '_Mass';
-            //$migrationName='m' . gmdate('ymd_Hi'.$i) . '_Mass';
+            //$migrationName='m' . gmdate('ymd_His') . '_Mass';
+            $migrationName='m' . gmdate('ymd_Hi'.$i) . '_Mass';
             $params=['tableList'=>$tableList,'tableRelations'=>$tableRelations,'migrationName'=>$migrationName];
             $files[] = new CodeFile(
                 Yii::getAlias($this->migrationPath) . '/' . $migrationName . '.php',

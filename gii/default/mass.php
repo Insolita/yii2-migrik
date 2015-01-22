@@ -18,7 +18,7 @@ use yii\db\Migration;
 
 class <?= $migrationName ?> extends Migration
 {
-    public function up()
+    public function safeUp()
     {
         $tableOptions = '<?=$generator->tableOptions?>';
 $connection=Yii::$app->db;
@@ -54,7 +54,7 @@ echo 'Catch Exception '.$e->getMessage().' and rollBack this';
 }
     }
 
-    public function down()
+    public function safeDown()
     {
 $connection=Yii::$app->db;
 $transaction=$connection->beginTransaction();
