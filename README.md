@@ -26,4 +26,4 @@ Usage (MYSQL ONLY):
 Just install, go to gii and use
 
 Known Issues:
-  - not correct work gii preview - it`s features gii preview, and naming if migration files which named with timestamp data
+  - sometimes not correct work gii preview - it`s features gii preview, and naming of migration files which named with timestamp data
