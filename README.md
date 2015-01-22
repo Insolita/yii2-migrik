@@ -19,13 +19,13 @@ or add
 "insolita/yii2-migration-generator": "*"
 ```
 
-to the require section of your `composer.json` file.
+to the `require-dev` section of your `composer.json` file.
 
 
 Usage (MYSQL ONLY)
 -----
 
-Once the extension is installed, go to Gii and use it, and also create own templates - [see more](http://www.yiiframework.com/doc-2.0/guide-tool-gii).html#creating-your-own-templates :
+Once the extension is installed, go to Gii and use it, and also create own templates - [see more](http://www.yiiframework.com/doc-2.0/guide-tool-gii.html#creating-your-own-templates) :
 
 ```php
 <?= \insolita\migrik\AutoloadExample::widget(); ?>```
