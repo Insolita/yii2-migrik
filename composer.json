@@ -1,6 +1,6 @@
 {
     "name": "insolita/yii2-migration-generator",
-    "description": "try make it",
+    "description": "gii tool for mass migration generation by Schema ",
     "type": "yii2-extension",
     "keywords": ["yii2","extension"],
     "license": "MIT",

@@ -1,4 +1,4 @@
-Migration Generator From Mysql database
+Migration Generator From Mysql database (beta)
 =======================================
 generate migration files (not dumps!) with indexes, and foreign keys, for one table, comma separated list of tables,  by part of table name, for all tables by *
 
