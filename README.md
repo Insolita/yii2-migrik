@@ -24,3 +24,6 @@ to the require-dev section of your `composer.json` file.
 
 Usage (MYSQL ONLY):
 Just install, go to gii and use
+
+Known Issues:
+  - not correct work gii preview - it`s features gii preview, who
