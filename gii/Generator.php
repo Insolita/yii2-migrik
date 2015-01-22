@@ -172,7 +172,7 @@ class Generator extends \yii\gii\Generator{
                 $this->render('relation.php', $params)
             );
         }else{
-            foreach ($this->getTableNames() as $tableName) {
+            foreach ($this->getTables() as $tableName) {
                 $i++;
                 $tableSchema = $db->getTableSchema($tableName);
                 $tableCaption=$this->getTableCaption($tableName);
