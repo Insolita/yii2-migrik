@@ -46,6 +46,6 @@ class <?= $migrationName ?> extends Migration
 <?php if(!empty($tableIndexes) && is_array($tableIndexes)):?><?php foreach($tableIndexes as $name=>$data):?><?php if($name!='PRIMARY'):?>
         $this->dropIndex('<?=$name?>', '<?=$tableAlias?>');
 <?php endif;?><?php endforeach;?><?php endif?>
-        this->dropTable('<?= ($generator->usePrefix)?$tableAlias:$tableName ?>');
+        $this->dropTable('<?= ($generator->usePrefix)?$tableAlias:$tableName ?>');
     }
 }
