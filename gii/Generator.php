@@ -227,8 +227,8 @@ class Generator extends \yii\gii\Generator{
         if($col->size && !$col->autoIncrement){
             $append.=($col->scale)?'('.$col->size.','.$col->scale.')':'('.$col->size.')';
         }
-        $append.=(!$col->allowNull && !$col->autoIncrement)?' NOT NULL':'';
         $append.=($col->unsigned && !$col->autoIncrement)?' unsigned':'';
+        $append.=(!$col->allowNull && !$col->autoIncrement)?' NOT NULL':'';
 
         if(!is_null($col->defaultValue)){
             $append.=' DEFAULT '.($col->defaultValue instanceof Expression?$col->defaultValue->expression:'"'.$col->defaultValue.'"');
