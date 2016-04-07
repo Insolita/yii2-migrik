@@ -157,7 +157,7 @@ class Generator extends \yii\gii\Generator{
                 $tableRelations[]=['fKeys'=>$this->generateRelations($tableSchema),'tableAlias'=>$tableAlias,'tableName'=>$tableName];
                 $migrationName='m' . gmdate('ymd_Hi'.$i) . '_' .$tableCaption;
                 $params=compact('tableName','tableSchema','tableCaption','tableAlias','migrationName','tableColumns','tableIndexes');
-/                $files[] = new CodeFile(
+                $files[] = new CodeFile(
                     Yii::getAlias($this->migrationPath) . '/' . $migrationName . '.php',
                     $this->render('migration.php', $params)
                 );
@@ -333,6 +333,7 @@ class Generator extends \yii\gii\Generator{
                 $ignors[] = $this->tableIgnore;
             }
         }
+        $ignors = array_filter($ignors,'trim');
         if (!empty($ignors)) {
             foreach ($ignors as $ignoredTable) {
                 $prepared = $this->prepareTableName($ignoredTable);

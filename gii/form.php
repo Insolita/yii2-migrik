@@ -6,7 +6,7 @@
  */
 
 echo $form->field($generator, 'tableName');
-echo $form->field($generator, 'tableIgnore');
+echo $form->field($generator, 'tableIgnore')->textInput(['value'=>'*migrat*']);
 echo $form->field($generator, 'db');
 echo $form->field($generator, 'migrationPath');
 echo $form->field($generator, 'usePrefix')->checkbox();
