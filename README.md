@@ -1,6 +1,8 @@
-Migration Generator From Mysql database (beta)
+Migration Generator From Mysql database
 =======================================
 generate migration files (not dumps!) with indexes, and foreign keys, for one table, comma separated list of tables,  by part of table name, for all tables by *
+
+[work on postgresql too, but without indexes yet]
 
 Installation
 ------------
@@ -22,7 +24,6 @@ or add
 to the require-dev section of your `composer.json` file.
 
 
-Usage (MYSQL ONLY):
 Just install, go to gii and use
 
 Known Issues:

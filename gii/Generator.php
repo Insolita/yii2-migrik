@@ -232,13 +232,13 @@ class Generator extends \yii\gii\Generator{
         $append.=(!$col->allowNull && !$col->autoIncrement)?' NOT NULL':'';
 
         if(!is_null($col->defaultValue)){
-            $append.=' DEFAULT '.($col->defaultValue instanceof Expression?$col->defaultValue->expression:'"'.$col->defaultValue.'"');
+            $append.=" DEFAULT ".($col->defaultValue instanceof Expression?$col->defaultValue->expression:"'".$col->defaultValue."'");
         }
         if(!empty($col->comment)){
-            $append.=' COMMENT "'.$col->comment.'"';
+            $append.=" COMMENT '".$col->comment."'";
         }
 
-        return $coldata.".'".$append."'";
+        return $coldata.'."'.$append.'"';
     }
 
     public function generateRelations($schema){
