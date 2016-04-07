@@ -157,7 +157,7 @@ class Generator extends \yii\gii\Generator{
                 $tableRelations[]=['fKeys'=>$this->generateRelations($tableSchema),'tableAlias'=>$tableAlias,'tableName'=>$tableName];
                 $migrationName='m' . gmdate('ymd_Hi'.$i) . '_' .$tableCaption;
                 $params=compact('tableName','tableSchema','tableCaption','tableAlias','migrationName','tableColumns','tableIndexes');
-                $files[] = new CodeFile(
+/                $files[] = new CodeFile(
                     Yii::getAlias($this->migrationPath) . '/' . $migrationName . '.php',
                     $this->render('migration.php', $params)
                 );
@@ -261,19 +261,24 @@ class Generator extends \yii\gii\Generator{
     }
     public function generateIndexes($tableName){
         $indexes=[];
-        $query=Yii::$app->db->createCommand('SHOW INDEX FROM '.$tableName)->queryAll();
-        if($query){
-            foreach($query as $i=>$index){
-                $indexes[$index['Key_name']]['cols'][$index['Seq_in_index']]=$index['Column_name'];
-                $indexes[$index['Key_name']]['isuniq']=($index['Non_unique']==1)?0:1;
+        if($this->getDbConnection()->driverName == 'mysql'){
+            $query=$this->getDbConnection()->createCommand('SHOW INDEX FROM [['.$tableName.']]')->queryAll();
+            if($query){
+                foreach($query as $i=>$index){
+                    $indexes[$index['Key_name']]['cols'][$index['Seq_in_index']]=$index['Column_name'];
+                    $indexes[$index['Key_name']]['isuniq']=($index['Non_unique']==1)?0:1;
+                }
             }
+        }else{
+            //Skip index getter for postgresql
         }
+
 
         return $indexes;
     }
 
     public function generatePure($tableName){
-        $query=Yii::$app->db->createCommand('SHOW CREATE TABLE '.$tableName)->queryOne();
+        $query=$this->getDbConnection()->createCommand('SHOW CREATE TABLE '.$tableName)->queryOne();
         return isset($query['Create Table'])?:'';
         /**
          * @TODO

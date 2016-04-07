@@ -21,7 +21,7 @@ class <?= $migrationName ?> extends Migration
     public function safeUp()
     {
         $tableOptions = '<?=$generator->tableOptions?>';
-$connection=Yii::$app->db;
+$connection=Yii::$app-><?=$generator->db?>;
 $transaction=$connection->beginTransaction();
 try{
 <?php foreach($tableList as $tableData):?>
@@ -56,7 +56,7 @@ echo 'Catch Exception '.$e->getMessage().' and rollBack this';
 
     public function safeDown()
     {
-$connection=Yii::$app->db;
+$connection=Yii::$app-><?=$generator->db?>;
 $transaction=$connection->beginTransaction();
 try{
 <?php if(!empty($tableRelations) && is_array($tableRelations)):?>
