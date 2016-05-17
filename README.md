@@ -18,7 +18,7 @@ php composer.phar require-dev --prefer-dist insolita/yii2-migration-generator "*
 or add
 
 ```
-"insolita/yii2-migration-generator": "*"
+"insolita/yii2-migration-generator": "~1.0"
 ```
 
 to the require-dev section of your `composer.json` file.
