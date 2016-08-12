@@ -4,8 +4,8 @@
  * The following variables are available in this view:
  */
 /** @var $migrationName string the new migration class name
- *  @var array  $tableRelations
- *  @var insolita\migrik\gii\Generator $generator
+ *  @var array                                  $tableRelations
+ *  @var insolita\migrik\gii\StructureGenerator $generator
  */
 
 echo "<?php\n";

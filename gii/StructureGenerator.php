@@ -15,7 +15,7 @@ use yii\gii\CodeFile;
 use yii\db\TableSchema;
 set_time_limit(0);
 
-class Generator extends \yii\gii\Generator{
+class StructureGenerator extends \yii\gii\Generator{
 
 
     public $db = 'db';
@@ -66,6 +66,20 @@ class Generator extends \yii\gii\Generator{
                 [['genmode'],'in','range'=>['single','mass']],
             ]);
     }
+
+    /**
+     * Returns the view file for the input form of the generator.
+     * The default implementation will return the "form.php" file under the directory
+     * that contains the generator class file.
+     * @return string the view file for the input form of the generator.
+     */
+    public function formView()
+    {
+        $class = new ReflectionClass($this);
+
+        return dirname($class->getFileName()) . '/form_structure.php';
+    }
+
     /**
      * @inheritdoc
      */
