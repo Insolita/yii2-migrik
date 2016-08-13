@@ -9,6 +9,7 @@ namespace insolita\migrik\resolver;
 use insolita\migrik\contracts\IMigrationColumnResolver;
 use yii\db\ColumnSchema;
 use yii\db\ColumnSchemaBuilder;
+use yii\db\Schema;
 use yii\db\TableSchema;
 use yii\helpers\ArrayHelper;
 
@@ -28,6 +29,10 @@ abstract class BaseColumnResolver implements IMigrationColumnResolver
      * @var TableSchema $tableSchema
      **/
     public $tableSchema;
+    /**
+     * @var Schema $schema
+    **/
+    public $schema;
 
 
     /**
@@ -36,10 +41,11 @@ abstract class BaseColumnResolver implements IMigrationColumnResolver
      * @param \yii\db\TableSchema         $tableSchema
      * @param \yii\db\ColumnSchemaBuilder $columnSchemaBuilder
      */
-    public function __construct(TableSchema $tableSchema, ColumnSchemaBuilder $columnSchemaBuilder)
+    public function __construct(TableSchema $tableSchema, ColumnSchemaBuilder $columnSchemaBuilder, Schema $schema)
     {
         $this->setColumnSchemaBuilder($columnSchemaBuilder);
         $this->setTableSchema($tableSchema);
+        $this->setSchema($schema);
     }
 
     /**
@@ -60,6 +66,16 @@ abstract class BaseColumnResolver implements IMigrationColumnResolver
     public function setTableSchema(TableSchema $tableSchema)
     {
         $this->tableSchema = $tableSchema;
+    }
+
+    /**
+     * @param \yii\db\Schema $schema
+     *
+     * @return void
+     */
+    public function setSchema(Schema $schema)
+    {
+        $this->schema = $schema;
     }
 
 
@@ -92,37 +108,67 @@ abstract class BaseColumnResolver implements IMigrationColumnResolver
     /**
      * @param \yii\db\ColumnSchema $column
      *
-     * @return mixed
+     * @return string
      */
     abstract protected function resolveString(ColumnSchema $column);
 
     /**
      * @param \yii\db\ColumnSchema $column
      *
-     * @return mixed
+     * @return string
      */
     abstract protected function resolveNumeric(ColumnSchema $column);
 
     /**
      * @param \yii\db\ColumnSchema $column
      *
-     * @return mixed
+     * @return string
      */
     abstract protected function resolveTime(ColumnSchema $column);
 
     /**
      * @param \yii\db\ColumnSchema $column
      *
-     * @return mixed
+     * @return string
      */
     abstract protected function resolvePk(ColumnSchema $column);
 
     /**
      * @param \yii\db\ColumnSchema $column
      *
-     * @return mixed
+     * @return string
      */
     abstract protected function resolveOther(ColumnSchema $column);
 
+    /**
+     * Builds the default value specification for the column.
+     * @return string string with default value of column.
+     */
+    protected function buildDefaultValue(ColumnSchema $column)
+    {
+        if ($column->defaultValue === null) {
+            return $column->allowNull === true ? ' DEFAULT NULL' : '';
+        }
 
+        $string = 'DEFAULT ';
+        switch (gettype($column->defaultValue)) {
+            case 'integer':
+                $string .= (string) $column->defaultValue;
+                break;
+            case 'double':
+                // ensure type cast always has . as decimal separator in all locales
+                $string .= str_replace(',', '.', (string) $column->defaultValue);
+                break;
+            case 'boolean':
+                $string .= $column->defaultValue ? 'TRUE' : 'FALSE';
+                break;
+            case 'object':
+                $string .= (string) $column->defaultValue;
+                break;
+            default:
+                $string .= "'{$column->defaultValue}'";
+        }
+
+        return $string;
+    }
 }

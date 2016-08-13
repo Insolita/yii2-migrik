@@ -5,6 +5,7 @@
 
 namespace insolita\migrik\contracts;
 use yii\db\ColumnSchemaBuilder;
+use yii\db\Schema;
 use yii\db\TableSchema;
 
 
@@ -30,6 +31,13 @@ interface IMigrationColumnResolver
      * @return mixed
      */
     public function setTableSchema(TableSchema $tableSchema);
+
+    /**
+     * @param \yii\db\Schema $schema
+     *
+     * @return mixed
+     */
+    public function setSchema(Schema $schema);
 
     /**
      * @param \yii\db\ColumnSchemaBuilder $columnSchemaBuilder
