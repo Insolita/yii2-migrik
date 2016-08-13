@@ -6,12 +6,16 @@
 namespace insolita\migrik\gii;
 
 
-use yii\db\Connection;
+use Yii;
+use yii\db\Query;
 use yii\gii\CodeFile;
 use yii\gii\Generator;
+use yii\helpers\StringHelper;
 
 class DataGenerator extends Generator
 {
+    use GeneratorTrait;
+
     const MODE_QUERY = 'query';
     const MODE_MODEL = 'model';
 
@@ -19,14 +23,16 @@ class DataGenerator extends Generator
     public $migrationPath = '@app/migrations';
     public $tableName;
     public $onlyColumns;
+    public $exceptColumns;
     public $insertMode = self::MODE_QUERY;
     public $usePrefix = true;
     public $modelClass;
+    public $modelBasename=null;
 
-    protected $rawData;
-    protected $tableColumns;
-    protected $tableCaption;
-    protected $tableAlias;
+    public $rawData;
+    public $tableColumns;
+    public $tableCaption;
+    public $tableAlias;
 
     /**
      * @return string name of the code generator
@@ -55,6 +61,7 @@ class DataGenerator extends Generator
                 'db' => 'Database Connection ID',
                 'tableName' => 'Table Name',
                 'onlyColumns' => 'Column List',
+                'exceptColumns' => 'Ignore Column List',
                 'migrationPath' => 'Migration Path',
                 'usePrefix' => 'Replace table prefix',
                 'insertMode' => 'Insert Mode',
@@ -74,6 +81,8 @@ class DataGenerator extends Generator
                 'db' => 'This is the ID of the DB application component.',
                 'tableName' => 'table name',
                 'onlyColumns' => 'List of columns used in migration, separated with comma [By default all columns used]',
+                'exceptColumns' => 'List of columns skipped in migration, separated with comma [By default all columns 
+                used]',
                 'migrationPath' => 'Path for save migration file',
                 'usePrefix' => 'Use Table Prefix Replacer eg.{{%tablename}} instead of prefix_tablename',
                 'modelClass' => 'Full class with namespace like app\models\MyModel'
@@ -81,30 +90,6 @@ class DataGenerator extends Generator
         );
     }
 
-    /**
-     * @inheritdoc
-     */
-    public function autoCompleteData()
-    {
-        $db = $this->getDbConnection();
-        if ($db !== null) {
-            return [
-                'tableName' => function () use ($db) {
-                    return $db->getSchema()->getTableNames();
-                },
-            ];
-        } else {
-            return [];
-        }
-    }
-
-    /**
-     * @return Connection the DB connection as specified by [[db]].
-     */
-    protected function getDbConnection()
-    {
-        return Yii::$app->{$this->db};
-    }
 
     /**
      * @inheritdoc
@@ -114,7 +99,7 @@ class DataGenerator extends Generator
         return array_merge(
             parent::rules(),
             [
-                [['db', 'tableName', 'onlyColumns', 'modelClass'], 'filter', 'filter' => 'trim'],
+                [['db', 'tableName', 'onlyColumns','exceptColumns', 'modelClass'], 'filter', 'filter' => 'trim'],
                 [['db', 'tableName', 'insertMode'], 'required'],
                 [['db'], 'match', 'pattern' => '/^\w+$/', 'message' => 'Only word characters are allowed.'],
                 [
@@ -133,7 +118,6 @@ class DataGenerator extends Generator
                 ],
                 [['modelClass'], 'validateClass'],
                 [['db'], 'validateDb'],
-                [['tableName'], 'validateTableName'],
                 ['migrationPath', 'safe'],
                 [['usePrefix'], 'boolean'],
                 [['insertMode'], 'in', 'range' => [self::MODE_MODEL, self::MODE_QUERY]],
@@ -163,77 +147,35 @@ class DataGenerator extends Generator
      */
     public function generate()
     {
+        $this->tableCaption = $this->getTableCaption($this->tableName);
+        $this->tableAlias = $this->getTableAlias($this->tableCaption);
         $this->tableColumns = $this->prepareTableColumns();
         $this->rawData = $this->getTableData($this->tableName, $this->tableColumns);
-        return call_user_func($this, $this->insertMode . 'ModeGenerate');
+        return call_user_func([$this, $this->insertMode . 'ModeGenerate']);
 
     }
 
     /**
      * @return array
-    **/
-    protected function prepareTableColumns(){
+     **/
+    protected function prepareTableColumns()
+    {
         $tableSchema = $this->getDbConnection()->getTableSchema($this->tableName);
         $schemaColumns = $tableSchema->getColumnNames();
-        $this->onlyColumns = preg_replace('/\s/u','',$this->onlyColumns);
-        if(empty($this->onlyColumns)){
+        $this->onlyColumns = preg_replace('/\s/u', '', $this->onlyColumns);
+        $this->exceptColumns = preg_replace('/\s/u', '', $this->exceptColumns);
+        if (empty($this->onlyColumns) && empty($this->exceptColumns)) {
             return $schemaColumns;
         }
-        $neededColumns = array_filter(explode(',',$this->onlyColumns),'trim');
-        return array_intersect($neededColumns, $schemaColumns);
-    }
-
-    /**
-     * Get Table name without prefix
-     * @param string $tableName
-     * @return string
-     **/
-    public function getTableCaption($tableName)
-    {
-        return str_replace($this->getDbConnection()->tablePrefix, '', strtolower($tableName));
-    }
-
-
-    /**
-     * Get yii-like table alias
-     * @param string $tableCaption
-     * @return string
-     **/
-    public function getTableAlias($tableCaption)
-    {
-        return '{{%' . $tableCaption . '}}';
-    }
-
-    /**
-     *
-     * @return CodeFile[] a list of code files to be created.
-     */
-    protected function queryModeGenerate()
-    {
-        $migrationName='m' . gmdate('ymd_Hi0') . '_'.$this->tableCaption.'DataInsert';
-        return [new CodeFile([
-                                 Yii::getAlias($this->migrationPath) . '/' . $migrationName . '.php',
-                                 $this->render('data_batch.php', [
-                                     'generator'=>$this,
-                                     'migrationName'=>$migrationName
-                                 ])
-                             ])];
-    }
-
-    /**
-     *
-     * @return CodeFile[] a list of code files to be created.
-     */
-    protected function modelModeGenerate()
-    {
-        $migrationName='m' . gmdate('ymd_Hi0') . '_'.$this->tableCaption.'ModelInsert';
-        return [new CodeFile([
-                                 Yii::getAlias($this->migrationPath) . '/' . $migrationName . '.php',
-                                 $this->render('data_model.php', [
-                                     'generator'=>$this,
-                                     'migrationName'=>$migrationName
-                                 ])
-                             ])];
+        if(!empty($this->onlyColumns)){
+            $neededColumns = array_filter(explode(',', $this->onlyColumns), 'trim');
+            $schemaColumns = array_intersect($neededColumns, $schemaColumns);
+        }
+        if(!empty($this->exceptColumns)){
+            $neededColumns = array_filter(explode(',', $this->exceptColumns), 'trim');
+            $schemaColumns = array_diff($schemaColumns, $neededColumns);
+        }
+        return $schemaColumns;
     }
 
     /**
@@ -252,10 +194,72 @@ class DataGenerator extends Generator
         } else {
             $tableSchema = $this->getDbConnection()->getTableSchema($tableName);
             foreach ($tableSchema->columns as $column) {
-                $data[$column->name] = "";
+                if(in_array($column->name, $columns)){
+                    $data[$column->name] = "";
+                }
             }
             return [$data];
         }
+    }
+
+
+    /**
+     * Returns the view file for the input form of the generator.
+     * The default implementation will return the "form.php" file under the directory
+     * that contains the generator class file.
+     *
+     * @return string the view file for the input form of the generator.
+     */
+    public function formView()
+    {
+        $class = new \ReflectionClass($this);
+
+        return dirname($class->getFileName()) . '/form_data.php';
+    }
+
+    /**
+     *
+     * @return CodeFile[] a list of code files to be created.
+     */
+    protected function queryModeGenerate()
+    {
+        $migrationName = 'm' . gmdate('ymd_Hi00') . '_' . $this->tableCaption . 'DataInsert';
+        return [
+            new CodeFile(
+
+                Yii::getAlias($this->migrationPath) . '/' . $migrationName . '.php', $this->render(
+                'data_batch.php',
+                [
+                    'generator' => $this,
+                    'migrationName' => $migrationName
+                ]
+            )
+
+            )
+        ];
+    }
+
+    /**
+     *
+     * @return CodeFile[] a list of code files to be created.
+     */
+    protected function modelModeGenerate()
+    {
+        $this->modelBasename = StringHelper::basename($this->modelClass);
+        $migrationName = 'm' . gmdate('ymd_Hi00') . '_' . $this->tableCaption . 'ModelInsert';
+        return [
+            new CodeFile(
+
+                Yii::getAlias($this->migrationPath) . '/' . $migrationName . '.php', $this->render(
+                'data_model.php',
+                [
+                    'generator' => $this,
+                    'migrationName' => $migrationName
+                ]
+            )
+
+            )
+        ];
     }
 
 

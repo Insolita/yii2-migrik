@@ -3,40 +3,52 @@
  * This view is used by console/controllers/MigrateController.php
  * The following variables are available in this view:
  *  @var $migrationName string the new migration class name
- *  @var $tableAlias string table_name
- *  @var $tableName string table_name
- *  @var $modelClass string
- *  @var array $columnMap
  *  @var insolita\migrik\gii\DataGenerator $generator
  */
 
 echo "<?php\n";
 ?>
 
-use yii\db\Schema;
 use yii\db\Exception;
 use yii\db\Migration;
 use yii\helpers\VarDumper;
+use yii\helpers\Console;
+use \yii\base\Event;
+use <?=$generator->modelClass?>;
 
 class <?= $migrationName ?> extends Migration
 {
     public function safeUp()
     {
-          <?php foreach($columnMap as $attributes):?>
-          $model = new <?=\yii\helpers\StringHelper::basename($modelClass)?>();
-          $attributes=<?=\yii\helpers\VarDumper::export($attributes)?>;
-          $model->setAttributes($attributes);
-           if(!$model->save()){
-              $this->stderr('Fail save model with attributes '
-              .VarDumper::dumpAsString($model->getAttributes()).' with errors '
-              .VarDumper::dumpAsString($model->getErrors()));
-              throw new Exception('Fail save $model');
-           }
-           <?php endforeach;?>
+        /**
+        Uncomment this block for detach model behaviors
+        Event::on(<?=$generator->modelBasename?>::class, <?=$generator->modelBasename?>::EVENT_INIT,
+                 function(Event $event ){
+                     $event->sender->detachBehavior('someBehaviorName');
+        });
+        **/
+<?php foreach($generator->rawData as $attributes):?>
+        $model = new <?=$generator->modelBasename?>();
+        $model->setAttributes(
+            <?=\yii\helpers\VarDumper::export($attributes)?>,
+        false);
+        if(!$model->save()){
+            $this->stderr('Fail save model with attributes '
+                .VarDumper::dumpAsString($model->getAttributes()).' with errors '
+                .VarDumper::dumpAsString($model->getErrors()));
+                throw new Exception('Fail save $model');
+        }
+<?php endforeach;?>
     }
 
     public function safeDown()
     {
-        $this->dropTable('<?= ($generator->usePrefix)?$tableAlias:$tableName ?>');
+        //$this->truncateTable('<?= ($generator->usePrefix)?$generator->tableAlias:$generator->tableName ?> CASCADE');
+        //<?=$generator->modelBasename?>::deleteAll([]);
+    }
+
+    protected function stderr($message)
+    {
+        Console::output(Console::ansiFormat($message, [Console::FG_PURPLE]));
     }
 }

@@ -7,10 +7,10 @@
 
 echo $form->field($generator, 'tableName');
 echo $form->field($generator, 'onlyColumns');
+echo $form->field($generator, 'exceptColumns');
 echo $form->field($generator, 'db');
 echo $form->field($generator, 'migrationPath');
 echo $form->field($generator, 'usePrefix')->checkbox();
-echo $form->field($generator, 'tableOptions');
 echo $form->field($generator, 'insertMode')
     ->dropDownList([
         \insolita\migrik\gii\DataGenerator::MODE_QUERY=>'as batchInsert',

@@ -18,13 +18,14 @@ class <?= $migrationName ?> extends Migration
     public function safeUp()
     {
         $this->batchInsert('<?= ($generator->usePrefix)?$generator->tableAlias:$generator->tableName ?>',
-                            <?= \yii\helpers\VarDumper::export($generator->tableColumns) ?>,
-                            <?= \yii\helpers\VarDumper::export($generator->rawData) ?>,
-         );
+                           ["<?= implode('", "', $generator->tableColumns) ?>"],
+                            <?= \yii\helpers\VarDumper::export($generator->rawData) ?>
+
+        );
     }
 
     public function safeDown()
     {
-        //$this->dropTable('<?= ($generator->usePrefix)?$generator->tableAlias:$generator->tableName ?>');
+        //$this->truncateTable('<?= ($generator->usePrefix)?$generator->tableAlias:$generator->tableName ?> CASCADE');
     }
 }
