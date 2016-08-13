@@ -116,7 +116,7 @@ class DataGenerator extends Generator
                     'message' => 'Only word characters and backslashes 
             are allowed.'
                 ],
-                [['modelClass'], 'validateClass'],
+                [['modelClass'], 'validateClass','skipOnEmpty'=>false],
                 [['db'], 'validateDb'],
                 ['migrationPath', 'safe'],
                 [['usePrefix'], 'boolean'],
@@ -128,6 +128,10 @@ class DataGenerator extends Generator
     public function validateClass($attribute, $params)
     {
         if ($this->insertMode == self::MODE_MODEL) {
+            if(empty($this->$attribute)){
+                $this->addError($attribute,'Model Class Required in current insert Mode!');
+                return false;
+            }
             return parent::validateClass($attribute, $params);
         }
         return true;
