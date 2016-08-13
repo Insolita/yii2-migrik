@@ -286,6 +286,8 @@ class StructureGenerator extends \yii\gii\Generator
     public function generateIndexes($tableName)
     {
         $indexes = [];
+        $schema = $this->getDbConnection()->getSchema();
+
         if ($this->getDbConnection()->driverName == 'mysql') {
             $query = $this->getDbConnection()->createCommand('SHOW INDEX FROM [[' . $tableName . ']]')->queryAll();
             if ($query) {
@@ -294,8 +296,14 @@ class StructureGenerator extends \yii\gii\Generator
                     $indexes[$index['Key_name']]['isuniq'] = ($index['Non_unique'] == 1) ? 0 : 1;
                 }
             }
-        } else {
-            //Skip index getter for postgresql
+        } elseif (method_exists($schema, 'findUniqueIndexes')) {
+            $schemaIndexes = call_user_func([$schema, 'findUniqueIndexes']);
+            if (!empty($schemaIndexes)) {
+                foreach ($schemaIndexes as $indexName => $columns) {
+                    $indexes[$indexName]['cols'] = $columns;
+                    $indexes[$indexName]['isuniq'] = 1;
+                }
+            }
         }
 
 
@@ -377,23 +385,9 @@ class StructureGenerator extends \yii\gii\Generator
                 }
             }
         }
-        //return [VarDumper::dumpAsString($schema->foreignKeys)];
         return $rels;
     }
 
-    /**
-     * @param $tableName
-     *
-     * @return string
-     */
-    public function generatePure($tableName)
-    {
-        $query = $this->getDbConnection()->createCommand('SHOW CREATE TABLE ' . $tableName)->queryOne();
-        return isset($query['Create Table']) ?: '';
-        /**
-         * @TODO
-         **/
-    }
 
     /**
      * Validates the [[tableName]] attribute.
