@@ -27,7 +27,7 @@ class DataGenerator extends Generator
     public $insertMode = self::MODE_QUERY;
     public $usePrefix = true;
     public $modelClass;
-    public $modelBasename=null;
+    public $modelBasename = null;
 
     public $rawData;
     public $tableColumns;
@@ -99,7 +99,7 @@ class DataGenerator extends Generator
         return array_merge(
             parent::rules(),
             [
-                [['db', 'tableName', 'onlyColumns','exceptColumns', 'modelClass'], 'filter', 'filter' => 'trim'],
+                [['db', 'tableName', 'onlyColumns', 'exceptColumns', 'modelClass'], 'filter', 'filter' => 'trim'],
                 [['db', 'tableName', 'insertMode'], 'required'],
                 [['db'], 'match', 'pattern' => '/^\w+$/', 'message' => 'Only word characters are allowed.'],
                 [
@@ -167,11 +167,11 @@ class DataGenerator extends Generator
         if (empty($this->onlyColumns) && empty($this->exceptColumns)) {
             return $schemaColumns;
         }
-        if(!empty($this->onlyColumns)){
+        if (!empty($this->onlyColumns)) {
             $neededColumns = array_filter(explode(',', $this->onlyColumns), 'trim');
             $schemaColumns = array_intersect($neededColumns, $schemaColumns);
         }
-        if(!empty($this->exceptColumns)){
+        if (!empty($this->exceptColumns)) {
             $neededColumns = array_filter(explode(',', $this->exceptColumns), 'trim');
             $schemaColumns = array_diff($schemaColumns, $neededColumns);
         }
@@ -194,7 +194,7 @@ class DataGenerator extends Generator
         } else {
             $tableSchema = $this->getDbConnection()->getTableSchema($tableName);
             foreach ($tableSchema->columns as $column) {
-                if(in_array($column->name, $columns)){
+                if (in_array($column->name, $columns)) {
                     $data[$column->name] = "";
                 }
             }
@@ -215,6 +215,20 @@ class DataGenerator extends Generator
         $class = new \ReflectionClass($this);
 
         return dirname($class->getFileName()) . '/form_data.php';
+    }
+
+    /**
+     * Returns the root path to the default code template files.
+     * The default implementation will return the "templates" subdirectory of the
+     * directory containing the generator class file.
+     *
+     * @return string the root path to the default code template files.
+     */
+    public function defaultTemplate()
+    {
+        $class = new \ReflectionClass($this);
+
+        return dirname($class->getFileName()) . '/default_data';
     }
 
     /**
@@ -261,6 +275,5 @@ class DataGenerator extends Generator
             )
         ];
     }
-
 
 }

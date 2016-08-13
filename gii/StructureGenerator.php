@@ -516,6 +516,20 @@ class StructureGenerator extends \yii\gii\Generator
     }
 
     /**
+     * Returns the root path to the default code template files.
+     * The default implementation will return the "templates" subdirectory of the
+     * directory containing the generator class file.
+     *
+     * @return string the root path to the default code template files.
+     */
+    public function defaultTemplate()
+    {
+        $class = new \ReflectionClass($this);
+
+        return dirname($class->getFileName()) . '/default_structure';
+    }
+
+    /**
      * Checks if any of the specified columns is auto incremental.
      *
      * @param  \yii\db\TableSchema $table the table schema
