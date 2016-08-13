@@ -78,11 +78,14 @@ abstract class BaseColumnResolver implements IMigrationColumnResolver
          * @var ColumnSchema $column
          **/
         $column = $this->tableSchema->getColumn($columnName);
-        if (method_exists($this, 'resolve' . ucfirst($column->dbType) . 'Type')) {
-            return call_user_func([$this, 'resolve' . ucfirst($column->dbType)]);
+        $columnTypeMethod = 'resolve' . ucfirst($column->dbType) . 'Type';
+        if (method_exists($this, $columnTypeMethod)) {
+            \Yii::trace('try to call customMethod "'.$columnTypeMethod.'"', __METHOD__);
+            return call_user_func([$this, $columnTypeMethod], $column);
         } else {
             $columnCategory = ArrayHelper::getValue($this->columnSchemaBuilder->categoryMap, $column->type);
-            return call_user_func([$this, 'resolve' . ucfirst($columnCategory)]);
+            \Yii::trace('try to call categoryMethod "resolve' . ucfirst($columnCategory).'"', __METHOD__);
+            return call_user_func([$this, 'resolve' . ucfirst($columnCategory)], $column);
         }
     }
 
