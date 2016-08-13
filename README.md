@@ -21,7 +21,11 @@ The preferred way to install this extension is through [composer](http://getcomp
 Either run
 
 ```
-php composer.phar require -dev --prefer-dist insolita/yii2-migration-generator "~2.0"
+php composer.phar require -dev --prefer-dist insolita/yii2-migration-generator:~2.0
+```
+or 
+```
+composer require -dev --prefer-dist insolita/yii2-migration-generator:~2.0
 ```
 
 or add
