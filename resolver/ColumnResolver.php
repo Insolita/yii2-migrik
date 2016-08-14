@@ -21,6 +21,17 @@ class ColumnResolver extends BaseColumnResolver
     /**
      * @param \yii\db\ColumnSchema $column
      *
+     * @return string
+     */
+    protected function resolveString(ColumnSchema $column)
+    {
+        list($type, $size, $default, $nullable, $comment) = $this->resolveCommon($column);
+        return $this->buildString([$type . $size, $nullable, $default, $comment]);
+    }
+
+    /**
+     * @param \yii\db\ColumnSchema $column
+     *
      * @return array
      */
     protected function resolveCommon(ColumnSchema $column)
@@ -35,14 +46,46 @@ class ColumnResolver extends BaseColumnResolver
     }
 
     /**
-     * @param \yii\db\ColumnSchema $column
+     * Builds the default value specification for the column.
+     *
+     * @return string string with default value of column.
+     */
+    protected function buildDefaultValue(ColumnSchema $column)
+    {
+        if ($column->defaultValue === null) {
+            return $column->allowNull === true ? ' DEFAULT NULL' : '';
+        }
+
+        $string = 'DEFAULT ';
+        switch (gettype($column->defaultValue)) {
+            case 'integer':
+                $string .= (string)$column->defaultValue;
+                break;
+            case 'double':
+                // ensure type cast always has . as decimal separator in all locales
+                $string .= str_replace(',', '.', (string)$column->defaultValue);
+                break;
+            case 'boolean':
+                $string .= $column->defaultValue ? 'TRUE' : 'FALSE';
+                break;
+            case 'object':
+                $string .= (string)$column->defaultValue;
+                break;
+            default:
+                $string .= "'{$column->defaultValue}'";
+        }
+
+        return $string;
+    }
+
+    /**
+     * @param array $columnParts
      *
      * @return string
-     */
-    protected function resolveString(ColumnSchema $column)
+     **/
+    protected function buildString(array $columnParts)
     {
-        list($type, $size, $default, $nullable, $comment) = $this->resolveCommon($column);
-        return $this->buildString([$type . $size, $nullable, $default, $comment]);
+        return implode(' ', array_filter(array_map('trim', $columnParts), 'trim'));
     }
 
     /**
@@ -58,9 +101,12 @@ class ColumnResolver extends BaseColumnResolver
         }
         if ($column->defaultValue
             && (StringHelper::startsWith($column->defaultValue, "CURRENT")
-                or StringHelper::startsWith($column->defaultValue, "LOCAL")
-            )) {
-            $default = 'DEFAULT '.$column->defaultValue;
+                or StringHelper::startsWith(
+                    $column->defaultValue,
+                    "LOCAL"
+                ))
+        ) {
+            $default = 'DEFAULT ' . $column->defaultValue;
         }
         return $this->buildString([$type . $size, $nullable, $default, $comment]);
     }
@@ -73,7 +119,7 @@ class ColumnResolver extends BaseColumnResolver
     protected function resolvePk(ColumnSchema $column)
     {
         list($type, , , , $comment) = $this->resolveCommon($column);
-        return $this->buildString([$type , $comment]);
+        return $this->buildString([$type, $comment]);
     }
 
     /**
@@ -103,7 +149,15 @@ class ColumnResolver extends BaseColumnResolver
         $type = 'enum';
         if ($column->enumValues) {
             $schema = $this->schema;
-            $size = "(" . implode(', ', array_map([$schema, 'quoteValue'], $column->enumValues)) . ")";
+            $size = "(" . implode(
+                    ', ',
+                    array_map(
+                        function ($v) use ($schema) {
+                            return $schema->quoteValue($v);
+                        },
+                        $column->enumValues
+                    )
+                ) . ")";
         }
         return $this->buildString([$type . $size, $nullable, $default, $comment]);
     }
@@ -138,48 +192,6 @@ class ColumnResolver extends BaseColumnResolver
         }
         $unsigned = $column->unsigned ? 'UNSIGNED' : '';
         return $this->buildString([$type . $size, $unsigned, $nullable, $default, $comment]);
-    }
-
-    /**
-     * @param array $columnParts
-     *
-     * @return string
-     **/
-    protected function buildString(array $columnParts)
-    {
-        return implode(' ', array_filter(array_map('trim', $columnParts), 'trim'));
-    }
-
-    /**
-     * Builds the default value specification for the column.
-     * @return string string with default value of column.
-     */
-    protected function buildDefaultValue(ColumnSchema $column)
-    {
-        if ($column->defaultValue === null) {
-            return $column->allowNull === true ? ' DEFAULT NULL' : '';
-        }
-
-        $string = 'DEFAULT ';
-        switch (gettype($column->defaultValue)) {
-            case 'integer':
-                $string .= (string) $column->defaultValue;
-                break;
-            case 'double':
-                // ensure type cast always has . as decimal separator in all locales
-                $string .= str_replace(',', '.', (string) $column->defaultValue);
-                break;
-            case 'boolean':
-                $string .= $column->defaultValue ? 'TRUE' : 'FALSE';
-                break;
-            case 'object':
-                $string .= (string) $column->defaultValue;
-                break;
-            default:
-                $string .= "'{$column->defaultValue}'";
-        }
-
-        return $string;
     }
 
 }

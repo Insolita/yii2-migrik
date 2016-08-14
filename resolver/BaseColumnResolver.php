@@ -5,7 +5,6 @@
 
 namespace insolita\migrik\resolver;
 
-
 use insolita\migrik\contracts\IMigrationColumnResolver;
 use yii\db\ColumnSchema;
 use yii\db\ColumnSchemaBuilder;
@@ -22,62 +21,39 @@ use yii\helpers\ArrayHelper;
 abstract class BaseColumnResolver implements IMigrationColumnResolver
 {
     /**
+     * @var Schema $schema
+     **/
+    public $schema;
+
+    /**
      * @var ColumnSchemaBuilder $builder
      **/
-    public $columnSchemaBuilder;
+    protected $columnSchemaBuilder;
     /**
      * @var TableSchema $tableSchema
      **/
-    public $tableSchema;
+    protected $tableSchema;
     /**
-     * @var Schema $schema
+     * Other params for inherited class
+     * @var array $config
     **/
-    public $schema;
+    protected $config = [];
 
 
     /**
      * BaseColumnResolver constructor.
      *
-     * @param \yii\db\TableSchema         $tableSchema
-     * @param \yii\db\ColumnSchemaBuilder $columnSchemaBuilder
-     */
-    public function __construct(TableSchema $tableSchema, ColumnSchemaBuilder $columnSchemaBuilder, Schema $schema)
-    {
-        $this->setColumnSchemaBuilder($columnSchemaBuilder);
-        $this->setTableSchema($tableSchema);
-        $this->setSchema($schema);
-    }
-
-    /**
-     * @param \yii\db\ColumnSchemaBuilder $columnSchemaBuilder
-     *
-     * @return void
-     */
-    public function setColumnSchemaBuilder(ColumnSchemaBuilder $columnSchemaBuilder)
-    {
-        $this->columnSchemaBuilder = $columnSchemaBuilder;
-    }
-
-    /**
-     * @param \yii\db\TableSchema $tableSchema
-     *
-     * @return void
-     */
-    public function setTableSchema(TableSchema $tableSchema)
-    {
-        $this->tableSchema = $tableSchema;
-    }
-
-    /**
      * @param \yii\db\Schema $schema
-     *
-     * @return void
+     * @param \yii\db\TableSchema $tableSchema
+     * @param array $config  additional data
      */
-    public function setSchema(Schema $schema)
+    public function __construct(Schema $schema, TableSchema $tableSchema, array $config = [])
     {
         $this->schema = $schema;
+        $this->tableSchema = $tableSchema;
+        $this->columnSchemaBuilder = $schema->createColumnSchemaBuilder('');
+        $this->config = $config;
     }
-
 
     /**
      * Method must return string of representation of  part of migration for current column name
@@ -93,14 +69,14 @@ abstract class BaseColumnResolver implements IMigrationColumnResolver
         /**
          * @var ColumnSchema $column
          **/
-        $column = $this->tableSchema->getColumn($columnName);
+        $column = $this->getTableSchema()->getColumn($columnName);
         $columnTypeMethod = 'resolve' . ucfirst($column->dbType) . 'Type';
         if (method_exists($this, $columnTypeMethod)) {
-            \Yii::trace('try to call customMethod "'.$columnTypeMethod.'"', __METHOD__);
+            \Yii::trace('try to call customMethod "' . $columnTypeMethod . '"', __METHOD__);
             return call_user_func([$this, $columnTypeMethod], $column);
         } else {
-            $columnCategory = ArrayHelper::getValue($this->columnSchemaBuilder->categoryMap, $column->type);
-            \Yii::trace('try to call categoryMethod "resolve' . ucfirst($columnCategory).'"', __METHOD__);
+            $columnCategory = ArrayHelper::getValue($this->getColumnSchemaBuilder()->categoryMap, $column->type);
+            \Yii::trace('try to call categoryMethod "resolve' . ucfirst($columnCategory) . '"', __METHOD__);
             return call_user_func([$this, 'resolve' . ucfirst($columnCategory)], $column);
         }
     }
@@ -141,4 +117,19 @@ abstract class BaseColumnResolver implements IMigrationColumnResolver
     abstract protected function resolveOther(ColumnSchema $column);
 
 
+    /**
+     * @return \yii\db\ColumnSchemaBuilder
+     */
+    protected function getColumnSchemaBuilder()
+    {
+        return $this->columnSchemaBuilder;
+    }
+
+    /**
+     * @return \yii\db\TableSchema
+     */
+    protected function getTableSchema()
+    {
+        return $this->tableSchema;
+    }
 }

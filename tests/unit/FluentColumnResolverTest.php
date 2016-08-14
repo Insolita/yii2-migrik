@@ -77,8 +77,7 @@ class FluentColumnResolverTest extends DbTestCase
             $schema = \Yii::$app->getDb()->getSchema();
             $tschema = $this->getMockBuilder(TableSchema::class)->getMock();
             $tschema->expects($this->once())->method('getColumn')->willReturn($testItem['col']);
-            $cbuilder = $this->getMockBuilder(ColumnSchemaBuilder::class)->disableOriginalConstructor()->getMock();
-            $resolver = new FluentColumnResolver($tschema, $cbuilder, $schema);
+            $resolver = new FluentColumnResolver($schema, $tschema);
             $string = $resolver->resolveColumn('col');
             verify($string)->equals($testItem['expect']);
         }
@@ -104,8 +103,7 @@ class FluentColumnResolverTest extends DbTestCase
             $schema = \Yii::$app->getDb()->getSchema();
             $tschema = $this->getMockBuilder(TableSchema::class)->getMock();
             $tschema->expects($this->once())->method('getColumn')->willReturn($testItem['col']);
-            $cbuilder = $this->getMockBuilder(ColumnSchemaBuilder::class)->disableOriginalConstructor()->getMock();
-            $resolver = new FluentColumnResolver($tschema, $cbuilder, $schema);
+            $resolver = new FluentColumnResolver($schema, $tschema);
             $string = $resolver->resolveColumn('col');
             verify($string)->equals($testItem['expect']);
         }
@@ -177,8 +175,7 @@ class FluentColumnResolverTest extends DbTestCase
             $schema = \Yii::$app->getDb()->getSchema();
             $tschema = $this->getMockBuilder(TableSchema::class)->getMock();
             $tschema->expects($this->once())->method('getColumn')->willReturn($testItem['col']);
-            $cbuilder = $this->getMockBuilder(ColumnSchemaBuilder::class)->disableOriginalConstructor()->getMock();
-            $resolver = new FluentColumnResolver($tschema, $cbuilder, $schema);
+            $resolver = new FluentColumnResolver($schema, $tschema);
             $string = $resolver->resolveColumn('col');
             verify($string)->equals($testItem['expect']);
         }
@@ -216,8 +213,7 @@ class FluentColumnResolverTest extends DbTestCase
             $schema = \Yii::$app->getDb()->getSchema();
             $tschema = $this->getMockBuilder(TableSchema::class)->getMock();
             $tschema->expects($this->once())->method('getColumn')->willReturn($testItem['col']);
-            $cbuilder = $this->getMockBuilder(ColumnSchemaBuilder::class)->disableOriginalConstructor()->getMock();
-            $resolver = new FluentColumnResolver($tschema, $cbuilder, $schema);
+            $resolver = new FluentColumnResolver($schema, $tschema);
             $string = $resolver->resolveColumn('col');
             verify($string)->equals($testItem['expect']);
         }
@@ -245,8 +241,7 @@ class FluentColumnResolverTest extends DbTestCase
             $schema = \Yii::$app->getDb()->getSchema();
             $tschema = $this->getMockBuilder(TableSchema::class)->getMock();
             $tschema->expects($this->once())->method('getColumn')->willReturn($testItem['col']);
-            $cbuilder = $this->getMockBuilder(ColumnSchemaBuilder::class)->disableOriginalConstructor()->getMock();
-            $resolver = new FluentColumnResolver($tschema, $cbuilder, $schema);
+            $resolver = new FluentColumnResolver($schema, $tschema);
             $string = $resolver->resolveColumn('col');
             verify($string)->equals($testItem['expect']);
         }
