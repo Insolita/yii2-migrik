@@ -70,6 +70,17 @@ class FluentColumnResolverTest extends DbTestCase
                 ),
                 'expect' => '$this->string()->null()->defaultValue(null)->comment(\'Some comment\')'
             ],
+            [
+                'col' => new ColumnSchema(
+                    [
+                        'type' => Schema::TYPE_BINARY,
+                        'allowNull' => false,
+                        'comment' => 'Some comment',
+                        'dbType' => 'binary'
+                    ]
+                ),
+                'expect' => '$this->binary()->notNull()->comment(\'Some comment\')'
+            ],
 
         ];
 
@@ -166,9 +177,20 @@ class FluentColumnResolverTest extends DbTestCase
                         'dbType' => 'float'
                     ]
                 ),
-                'expect' => '$this->float(, 3)->unsigned()->notNull()->defaultValue("340.213")'
+                'expect' => '$this->float(3)->unsigned()->notNull()->defaultValue("340.213")'
             ],
-
+            [
+                'col' => new ColumnSchema(
+                    [
+                        'type' => Schema::TYPE_INTEGER,
+                        'size' => 6,
+                        'defaultValue' => 0,
+                        'unsigned' => true,
+                        'dbType' => 'float'
+                    ]
+                ),
+                'expect' => '$this->integer(6)->unsigned()->notNull()->defaultValue(0)'
+            ],
         ];
 
         foreach ($test as $testItem) {

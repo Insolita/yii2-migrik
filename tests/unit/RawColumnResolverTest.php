@@ -304,8 +304,21 @@ class RawColumnResolverTest extends DbTestCase
                         'dbType' => 'float'
                     ]
                 ),
-                'expect' => 'Schema::TYPE_FLOAT' . '."(, 3) UNSIGNED NOT NULL DEFAULT 340.213"'
+                'expect' => 'Schema::TYPE_FLOAT' . '."(3) UNSIGNED NOT NULL DEFAULT 340.213"'
             ],
+            [
+                'col' => new ColumnSchema(
+                    [
+                        'type' => Schema::TYPE_INTEGER,
+                        'size' => 6,
+                        'defaultValue' => 0,
+                        'unsigned' => true,
+                        'dbType' => 'float'
+                    ]
+                ),
+                'expect' => 'Schema::TYPE_INTEGER' . '."(6) UNSIGNED NOT NULL DEFAULT 0"'
+            ],
+
 
         ];
 
