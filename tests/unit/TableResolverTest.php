@@ -5,20 +5,16 @@
 
 namespace insolita\migrik\tests\unit;
 
-
 use Codeception\Specify;
 use Codeception\Verify;
-use insolita\migrik\resolver\FluentColumnResolver;
-use yii\db\ColumnSchema;
-use yii\db\ColumnSchemaBuilder;
-use yii\db\Expression;
+use insolita\migrik\resolver\TableResolver;
 use yii\db\Schema;
 use yii\db\TableSchema;
 
 /**
  * @var Verify
  **/
-class FluentColumnResolverTest extends DbTestCase
+class TableResolverTest extends DbTestCase
 {
     use Specify;
 
@@ -39,233 +35,106 @@ class FluentColumnResolverTest extends DbTestCase
         ];
     }
 
-    public function testResolveString()
+    public function testGetSchema()
     {
-        $test = [
-            [
-                'col' => new ColumnSchema(
-                    ['type' => Schema::TYPE_TEXT, 'allowNull' => false, 'dbType' => 'text', 'size' => 1000]
-                ),
-                'expect' => '$this->text(1000)->notNull()'
-            ],
-            [
-                'col' => new ColumnSchema(
-                    [
-                        'type' => Schema::TYPE_TEXT,
-                        'allowNull' => false,
-                        'defaultValue' => 'blabla',
-                        'dbType' => 'text'
-                    ]
-                ),
-                'expect' => '$this->text()->notNull()->defaultValue(\'blabla\')'
-            ],
-            [
-                'col' => new ColumnSchema(
-                    [
-                        'type' => Schema::TYPE_STRING,
-                        'allowNull' => true,
-                        'comment' => 'Some comment',
-                        'dbType' => 'char'
-                    ]
-                ),
-                'expect' => '$this->string()->null()->defaultValue(null)->comment(\'Some comment\')'
-            ],
-            [
-                'col' => new ColumnSchema(
-                    [
-                        'type' => Schema::TYPE_BINARY,
-                        'allowNull' => false,
-                        'comment' => 'Some comment',
-                        'dbType' => 'binary'
-                    ]
-                ),
-                'expect' => '$this->binary()->notNull()->comment(\'Some comment\')'
-            ],
-
-        ];
-
-        foreach ($test as $testItem) {
-            $schema = \Yii::$app->getDb()->getSchema();
-            $tschema = $this->getMockBuilder(TableSchema::class)->getMock();
-            $tschema->expects($this->once())->method('getColumn')->willReturn($testItem['col']);
-            $resolver = new FluentColumnResolver($schema, $tschema);
-            $string = $resolver->resolveColumn('col');
-            verify($string)->equals($testItem['expect']);
-        }
+        $resolver = new TableResolver(\Yii::$app->getDb());
+        $schema = $resolver->schema;
+        verify($schema)->isInstanceOf(Schema::class);
+        verify($schema)->isInstanceOf(\yii\db\pgsql\Schema::class);
     }
 
-    public function testResolvePk()
+    public function testGetTableSchema()
     {
-        $test = [
-            [
-                'col' => new ColumnSchema(
-                    ['type' => Schema::TYPE_PK, 'allowNull' => true, 'dbType' => 'string', 'size' => 1000]
-                ),
-                'expect' => '$this->pk()'
-            ],
-            [
-                'col' => new ColumnSchema(['type' => Schema::TYPE_UBIGPK, 'comment' => 'It`s really big']),
-                'expect' => '$this->'.Schema::TYPE_UBIGPK . "()->comment('It`s really big')"
-            ]
-
-        ];
-
-        foreach ($test as $testItem) {
-            $schema = \Yii::$app->getDb()->getSchema();
-            $tschema = $this->getMockBuilder(TableSchema::class)->getMock();
-            $tschema->expects($this->once())->method('getColumn')->willReturn($testItem['col']);
-            $resolver = new FluentColumnResolver($schema, $tschema);
-            $string = $resolver->resolveColumn('col');
-            verify($string)->equals($testItem['expect']);
-        }
+        $resolver = new TableResolver(\Yii::$app->getDb());
+        $tableSchema = $resolver->getTableSchema('itt_migration');
+        verify_that($tableSchema);
+        verify($tableSchema)->isInstanceOf(TableSchema::class);
     }
 
-    public function testResolveNumeric()
+    public function testGetTableNames()
     {
-        $test = [
-            [
-                'col' => new ColumnSchema(
-                    [
-                        'type' => Schema::TYPE_BOOLEAN,
-                        'allowNull' => true,
-                        'dbType' => 'bool',
-                        'defaultValue' => true
-                    ]
-                ),
-                'expect' => '$this->boolean()->null()->defaultValue(true)'
-            ],
-            [
-                'col' => new ColumnSchema(
-                    [
-                        'type' => Schema::TYPE_BOOLEAN,
-                        'allowNull' => false,
-                        'dbType' => 'bool',
-                        'defaultValue' => false
-                    ]
-                ),
-                'expect' => '$this->boolean()->notNull()->defaultValue(false)'
-            ],
-            [
-                'col' => new ColumnSchema(
-                    [
-                        'type' => Schema::TYPE_BOOLEAN,
-                        'dbType' => 'bool'
-                    ]
-                ),
-                'expect' => '$this->boolean()->notNull()'
-            ],
-
-            [
-                'col' => new ColumnSchema(
-                    [
-                        'type' => Schema::TYPE_DECIMAL,
-                        'scale' => 8,
-                        'precision' => 2,
-                        'defaultValue' => 340.23,
-                        'dbType' => 'decimal'
-                    ]
-                ),
-                'expect' => '$this->decimal(8, 2)->notNull()->defaultValue("340.23")'
-            ],
-            [
-                'col' => new ColumnSchema(
-                    [
-                        'type' => Schema::TYPE_FLOAT,
-                        'precision' => 3,
-                        'defaultValue' => 340.213,
-                        'unsigned' => true,
-                        'dbType' => 'float'
-                    ]
-                ),
-                'expect' => '$this->float(3)->unsigned()->notNull()->defaultValue("340.213")'
-            ],
-            [
-                'col' => new ColumnSchema(
-                    [
-                        'type' => Schema::TYPE_INTEGER,
-                        'size' => 6,
-                        'defaultValue' => 0,
-                        'unsigned' => true,
-                        'dbType' => 'float'
-                    ]
-                ),
-                'expect' => '$this->integer(6)->unsigned()->notNull()->defaultValue(0)'
-            ],
-        ];
-
-        foreach ($test as $testItem) {
-            $schema = \Yii::$app->getDb()->getSchema();
-            $tschema = $this->getMockBuilder(TableSchema::class)->getMock();
-            $tschema->expects($this->once())->method('getColumn')->willReturn($testItem['col']);
-            $resolver = new FluentColumnResolver($schema, $tschema);
-            $string = $resolver->resolveColumn('col');
-            verify($string)->equals($testItem['expect']);
-        }
+        $resolver = new TableResolver(\Yii::$app->getDb());
+        $tableNames = $resolver->getTableNames();
+        verify($tableNames)->notEmpty();
+        verify($tableNames)->contains('itt_migration');
+        verify($tableNames)->contains('itt_auth_item');
     }
 
-    public function testResolveTime()
+    public function testFindTablesByPattern()
     {
-        $test = [
-            [
-                'col' => new ColumnSchema(
-                    [
-                        'type' => Schema::TYPE_DATE,
-                        'allowNull' => false,
-                        'dbType' => 'date',
-                        'defaultValue' => 'CURRENT_DATE'
-                    ]
-                ),
-                'expect' =>'$this->date()->notNull()->defaultExpression("CURRENT_DATE")'
-            ],
-            [
-                'col' => new ColumnSchema(
-                    [
-                        'type' => Schema::TYPE_DATETIME,
-                        'allowNull' => false,
-                        'precision' => 0,
-                        'dbType' => 'datetime',
-                        'defaultValue' => new Expression('NOW()')
-                    ]
-                ),
-                'expect' => '$this->datetime(0)->notNull()->defaultExpression("NOW()")'
-            ]
-        ];
+        $resolver = new TableResolver(\Yii::$app->getDb());
+        $this->specify(
+            'by table name',
+            function () use ($resolver) {
+                $founds = $resolver->findTablesByPattern('itt_migration');
+                verify($founds)->notEmpty();
+                verify($founds)->contains('itt_migration');
+                verify(count($founds))->equals(1);
+            }
+        );
 
-        foreach ($test as $testItem) {
-            $schema = \Yii::$app->getDb()->getSchema();
-            $tschema = $this->getMockBuilder(TableSchema::class)->getMock();
-            $tschema->expects($this->once())->method('getColumn')->willReturn($testItem['col']);
-            $resolver = new FluentColumnResolver($schema, $tschema);
-            $string = $resolver->resolveColumn('col');
-            verify($string)->equals($testItem['expect']);
-        }
+        $this->specify(
+            'by pattern one result',
+            function () use ($resolver) {
+                $founds = $resolver->findTablesByPattern('itt_migrat*');
+                verify($founds)->notEmpty();
+                verify($founds)->contains('itt_migration');
+                verify(count($founds))->equals(1);
+            }
+        );
+
+        $this->specify(
+            'by pattern bulk result',
+            function () use ($resolver) {
+                $founds = $resolver->findTablesByPattern('itt_auth*');
+                verify($founds)->notEmpty();
+                verify($founds)->contains('itt_auth_rule');
+                verify(count($founds))->equals(4);
+            }
+        );
     }
 
-    public function testResolveEnumType()
+    public function testGetRelations()
     {
-        $test = [
-            [
-                'col' => new ColumnSchema(
-                    [
-                        'type' => Schema::TYPE_STRING,
-                        'allowNull' => true,
-                        'dbType' => 'enum',
-                        'enumValues' => ['one', 'two', 'three'],
-                        'defaultValue' => 'two'
-                    ]
-                ),
-                'expect' => '$this->string()->null()->defaultValue(\'two\')'
-            ]
+        $resolver = new TableResolver(\Yii::$app->getDb());
+        $this->specify(
+            'by no relationed table',
+            function () use ($resolver) {
+                $founds = $resolver->getRelations('itt_migration');
+                verify($founds)->isEmpty();
+            }
+        );
 
-        ];
-
-        foreach ($test as $testItem) {
-            $schema = \Yii::$app->getDb()->getSchema();
-            $tschema = $this->getMockBuilder(TableSchema::class)->getMock();
-            $tschema->expects($this->once())->method('getColumn')->willReturn($testItem['col']);
-            $resolver = new FluentColumnResolver($schema, $tschema);
-            $string = $resolver->resolveColumn('col');
-            verify($string)->equals($testItem['expect']);
-        }
+        $this->specify(
+            'by  relationed table',
+            function () use ($resolver) {
+                $founds = $resolver->getRelations('itt_auth_item');
+                verify($founds)->notEmpty();
+                verify(count($founds))->equals(1);
+                verify($founds[0])->equals(['ftable' => 'itt_auth_rule', 'pk' => 'rule_name', 'fk' => 'name']);
+            }
+        );
     }
+
+    public function testGetIndexes()
+    {
+        $resolver = new TableResolver(\Yii::$app->getDb());
+        $this->specify(
+            'one',
+            function () use ($resolver) {
+                $founds = $resolver->getIndexes('itt_migration');
+                verify(count($founds))->equals(0);
+            }
+        );
+
+        $this->specify(
+            'two',
+            function () use ($resolver) {
+                $founds = $resolver->getIndexes('itt_auth_item');
+                verify(count($founds))->equals(1);
+            }
+        );
+    }
+
+
 }
