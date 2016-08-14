@@ -121,7 +121,6 @@ class StructureGenerator extends \yii\gii\Generator
                     'message' => 'Only word characters, underscore, comma,and optionally an asterisk are allowed.'
                 ],
                 [['db'], 'validateDb'],
-                [['tableName'], 'validateTableName'],
                 ['migrationPath', 'safe'],
                 ['tableOptions', 'safe'],
                 [['usePrefix'], 'boolean'],
@@ -133,6 +132,7 @@ class StructureGenerator extends \yii\gii\Generator
                 ],
                 [['genmode'], 'in', 'range' => [self::MOD_SINGLE, self::MOD_BULK]],
                 [['format'], 'in', 'range' => [self::FORMAT_FLUENT, self::FORMAT_RAW]],
+                [['tableName'], 'validateTableName'],
             ]
         );
     }

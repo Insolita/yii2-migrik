@@ -1,14 +1,17 @@
-Migration Generator From Mysql database
+Migration Generator From database
 =======================================
  - generate migration files (not dumps!) with indexes, and foreign keys, for one table, comma separated list of tables,  by part of table name, for all tables by 
  - generate migrations based on table data - in two ways - as batchInsert Query or as insert via model 
 
-[work on postgresql too, but without indexes yet]
-
 CHANGELOG
 -----------
+15.08.2016 - 2.1 version release 
+ - add ability for generate migrations in fluent interface (raw format also available)
+ - improve templates; add database initializations
+ - structure design; separate logic in external classes
+ - add ability to 
+ 
 13.08.2016 - 2.0 version release with new ability - generate migrations based on table data
-
 __Possible BC__
 - class insolita\migrik\gii\Generator was changed on insolita\migrik\gii\StructureGenerator
 if you made template customizations - see your gii config and replace old Generator class name
