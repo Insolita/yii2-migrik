@@ -8,11 +8,11 @@
 namespace insolita\migrik\gii;
 
 use insolita\migrik\contracts\IMigrationColumnResolver;
-use insolita\migrik\resolver\RawColumnResolver;
+use insolita\migrik\contracts\IMigrationTableResolver;
 use insolita\migrik\resolver\FluentColumnResolver;
+use insolita\migrik\resolver\RawColumnResolver;
+use insolita\migrik\resolver\TableResolver;
 use Yii;
-use yii\db\Expression;
-use yii\db\Schema;
 use yii\db\TableSchema;
 use yii\gii\CodeFile;
 
@@ -25,6 +25,10 @@ set_time_limit(0);
  */
 class StructureGenerator extends \yii\gii\Generator
 {
+    const MOD_SINGLE = 'single';
+    const MOD_BULK = 'bulk';
+    const FORMAT_FLUENT = 'fluent';
+    const FORMAT_RAW = 'raw';
 
     use GeneratorTrait;
 
@@ -47,11 +51,11 @@ class StructureGenerator extends \yii\gii\Generator
     /**
      * @var string
      */
-    public $genmode = 'single';
+    public $genmode = self::MOD_SINGLE;
     /**
      * @var string
      **/
-    public $format = 'fluent';
+    public $format = self::FORMAT_FLUENT;
 
     /**
      * @var string
@@ -74,6 +78,11 @@ class StructureGenerator extends \yii\gii\Generator
      * @var array
      */
     private $_tables = [];
+
+    /**
+     * @var null
+     */
+    private $tableResolver = null;
 
 
     /**
@@ -116,19 +125,20 @@ class StructureGenerator extends \yii\gii\Generator
                 ['migrationPath', 'safe'],
                 ['tableOptions', 'safe'],
                 [['usePrefix'], 'boolean'],
-                [['resolverClass'], 'validateClass'],
-                [['genmode'], 'in', 'range' => ['single', 'mass']],
-                [['format'], 'in', 'range' => ['fluent', 'raw']],
+                [
+                    ['resolverClass'],
+                    'validateClass',
+                    'params' => ['extends' => IMigrationColumnResolver::class],
+                    'skipOnEmpty' => true
+                ],
+                [['genmode'], 'in', 'range' => [self::MOD_SINGLE, self::MOD_BULK]],
+                [['format'], 'in', 'range' => [self::FORMAT_FLUENT, self::FORMAT_RAW]],
             ]
         );
     }
 
     /**
-     * Returns the view file for the input form of the generator.
-     * The default implementation will return the "form.php" file under the directory
-     * that contains the generator class file.
-     *
-     * @return string the view file for the input form of the generator.
+     * @inheritdoc
      */
     public function formView()
     {
@@ -181,6 +191,7 @@ class StructureGenerator extends \yii\gii\Generator
         );
     }
 
+
     /**
      * @inheritdoc
      */
@@ -213,81 +224,48 @@ class StructureGenerator extends \yii\gii\Generator
      */
     public function generate()
     {
-        $files = $tableRelations = $tableList = [];
-        $db = $this->getDbConnection();
-        $i = 10;
-        if ($this->genmode == 'single') {
-            foreach ($this->getTables() as $tableName) {
-                $i++;
-                $tableSchema = $db->getTableSchema($tableName);
-                $tableCaption = $this->getTableCaption($tableName);
-                $tableAlias = $this->getTableAlias($tableCaption);
-                $tableIndexes = $this->genmode == 'schema' ? null : $this->generateIndexes($tableName, $tableSchema);
-                $tableColumns = $this->columnsBySchema($tableSchema);
-                $tableRelations[] = [
-                    'fKeys' => $this->generateRelations($tableSchema),
-                    'tableAlias' => $tableAlias,
-                    'tableName' => $tableName
-                ];
-                $migrationName = 'm' . gmdate('ymd_Hi' . $i) . '_' . $tableCaption;
-                $params = compact(
-                    'tableName',
-                    'tableSchema',
-                    'tableCaption',
-                    'tableAlias',
-                    'migrationName',
-                    'tableColumns',
-                    'tableIndexes'
-                );
-                $files[] = new CodeFile(
-                    Yii::getAlias($this->migrationPath) . '/' . $migrationName . '.php',
-                    $this->render('migration.php', $params)
-                );
-            }
-            $i++;
+        if ($this->genmode == self::MOD_SINGLE) {
+            return $this->generateSingleMigration();
+        } else {
+            return $this->generateBulkMigration();
+        }
+    }
 
-            /**Костыль.. иначе gii глючит при попытке просмотра **/
-            $migrationName = 'm' . gmdate('ymd_Hi' . $i) . '_Relations';
-            //$migrationName='m' . gmdate('ymd_His') . '_Relations';
-            $params = ['tableRelations' => $tableRelations, 'migrationName' => $migrationName];
+    /**
+     * @return CodeFile[]
+     */
+    protected function generateSingleMigration()
+    {
+        $i = 10;
+        $files = [];
+        $allRelations = [];
+        foreach ($this->getTables() as $tableName) {
+            $i++;
+            list($tableCaption, $tableAlias, $tableIndexes, $tableColumns, $tableRelations)
+                = $this->collectTableInfo($tableName);
+            $allRelations[] = $tableRelations;
+            $migrationName = 'm' . gmdate('ymd_Hi' . $i) . '_' . $tableCaption;
+            $params = compact(
+                'tableName',
+                'tableCaption',
+                'tableAlias',
+                'migrationName',
+                'tableColumns',
+                'tableIndexes'
+            );
             $files[] = new CodeFile(
                 Yii::getAlias($this->migrationPath) . '/' . $migrationName . '.php',
-                $this->render('relation.php', $params)
-            );
-        } else {
-            foreach ($this->getTables() as $tableName) {
-                $i++;
-                $tableSchema = $db->getTableSchema($tableName);
-                $tableCaption = $this->getTableCaption($tableName);
-                $tableAlias = $this->getTableAlias($tableCaption);
-                $tableIndexes = $this->generateIndexes($tableName, $tableSchema);
-                $tableColumns = $this->columnsBySchema($tableSchema);
-                $tableRelations[] = [
-                    'fKeys' => $this->generateRelations($tableSchema),
-                    'tableAlias' => $tableAlias,
-                    'tableName' => $tableName
-                ];
-                $tableList[] = [
-                    'alias' => $tableAlias,
-                    'indexes' => $tableIndexes,
-                    'columns' => $tableColumns,
-                    'name' => $tableName
-                ];
-            }
-            $i++;
-            //$migrationName='m' . gmdate('ymd_His') . '_Mass';
-            $migrationName = 'm' . gmdate('ymd_Hi' . $i) . '_Mass';
-            $params = [
-                'tableList' => $tableList,
-                'tableRelations' => $tableRelations,
-                'migrationName' => $migrationName
-            ];
-            $files[] = new CodeFile(
-                Yii::getAlias($this->migrationPath) . '/' . $migrationName . '.php', $this->render('mass.php', $params)
+                $this->render('migration.php', $params)
             );
         }
-
-
+        $i++;
+        /**Костыль.. иначе gii глючит при попытке просмотра **/
+        $migrationName = 'm' . gmdate('ymd_Hi' . $i) . '_Relations';
+        $params = ['tableRelations' => $allRelations, 'migrationName' => $migrationName];
+        $files[] = new CodeFile(
+            Yii::getAlias($this->migrationPath) . '/' . $migrationName . '.php',
+            $this->render('relation.php', $params)
+        );
         return $files;
     }
 
@@ -304,42 +282,47 @@ class StructureGenerator extends \yii\gii\Generator
      *
      * @return array
      */
-    public function generateIndexes($tableName, $tableSchema)
+    protected function collectTableInfo($tableName)
     {
-        $indexes = [];
-        $schema = $this->getDbConnection()->getSchema();
-
-        if ($this->getDbConnection()->driverName == 'mysql') {
-            $query = $this->getDbConnection()->createCommand('SHOW INDEX FROM [[' . $tableName . ']]')->queryAll();
-            if ($query) {
-                foreach ($query as $i => $index) {
-                    $indexes[$index['Key_name']]['cols'][$index['Seq_in_index']] = $index['Column_name'];
-                    $indexes[$index['Key_name']]['isuniq'] = ($index['Non_unique'] == 1) ? 0 : 1;
-                }
-            }
-        } elseif (method_exists($schema, 'findUniqueIndexes')) {
-            $schemaIndexes = call_user_func([$schema, 'findUniqueIndexes'], $tableSchema);
-            if (!empty($schemaIndexes)) {
-                foreach ($schemaIndexes as $indexName => $columns) {
-                    $indexes[$indexName]['cols'] = $columns;
-                    $indexes[$indexName]['isuniq'] = 1;
-                }
-            }
-        }
-
-
-        return $indexes;
+        $tableCaption = $this->getTableCaption($tableName);
+        $tableAlias = $this->getTableAlias($tableCaption);
+        $tableIndexes = $this->getTableResolver()->getIndexes($tableName);
+        $tableColumns = $this->buildColumnDefinitions($tableName);
+        $tableRelations = [
+            'fKeys' => $this->getTableResolver()->getRelations($tableName),
+            'tableAlias' => $tableAlias,
+            'tableName' => $tableName
+        ];
+        return [$tableCaption, $tableAlias, $tableIndexes, $tableColumns, $tableRelations];
     }
 
     /**
-     * @param $tableSchema
+     * @return IMigrationTableResolver|TableResolver
+     **/
+    protected function getTableResolver()
+    {
+        if (!$this->tableResolver) {
+            /**
+             * @var IMigrationTableResolver
+             **/
+            $this->tableResolver = Yii::createObject(
+                ['class' => IMigrationTableResolver::class],
+                [$this->getDbConnection()]
+            );
+        }
+        return $this->tableResolver;
+    }
+
+    /**
+     * @param string $tableName
      *
      * @return array
      */
-    public function columnsBySchema(TableSchema $tableSchema)
+    protected function buildColumnDefinitions($tableName)
     {
         $cols = [];
-        $resolver = $this->createResolver($tableSchema);
+        $tableSchema = $this->getTableResolver()->getTableSchema($tableName);
+        $resolver = $this->createColumnResolver($tableSchema);
         foreach ($tableSchema->columns as $column) {
             $type = $resolver->resolveColumn($column->name);
             $cols[$column->name] = $type;
@@ -349,9 +332,10 @@ class StructureGenerator extends \yii\gii\Generator
 
     /**
      * @param TableSchema $tableSchema
+     *
      * @return IMigrationColumnResolver
-    **/
-    protected function createResolver(TableSchema $tableSchema)
+     **/
+    protected function createColumnResolver(TableSchema $tableSchema)
     {
         $params = [
             $this->getDbConnection()->schema,
@@ -367,29 +351,40 @@ class StructureGenerator extends \yii\gii\Generator
     }
 
     /**
-     * @param $schema
-     *
-     * @return array
+     * @return CodeFile[]
      */
-    public function generateRelations($schema)
+    protected function generateBulkMigration()
     {
-        /**@var TableSchema $schema * */
-        $rels = [];
-        if (!empty($schema->foreignKeys)) {
-            foreach ($schema->foreignKeys as $i => $constraint) {
-                foreach ($constraint as $pk => $fk) {
-                    if (!$pk) {
-                        $rels[$i]['ftable'] = $fk;
-                    } else {
-                        $rels[$i]['pk'] = $pk;
-                        $rels[$i]['fk'] = $fk;
-                    }
-                }
-            }
+        $i = 10;
+        $files = [];
+        $allRelations = [];
+        $allTables = [];
+        foreach ($this->getTables() as $tableName) {
+            $i++;
+            list(, $tableAlias, $tableIndexes, $tableColumns, $tableRelations)
+                = $this->collectTableInfo($tableName);
+            $allRelations[] = $tableRelations;
+            $allTables[] = [
+                'alias' => $tableAlias,
+                'indexes' => $tableIndexes,
+                'columns' => $tableColumns,
+                'name' => $tableName
+            ];
         }
-        return $rels;
+        $i++;
+        //$migrationName='m' . gmdate('ymd_His') . '_Mass';
+        $migrationName = 'm' . gmdate('ymd_Hi' . $i) . '_Mass';
+        $params = [
+            'tableList' => $allTables,
+            'tableRelations' => $allRelations,
+            'migrationName' => $migrationName
+        ];
+        $files[] = new CodeFile(
+            Yii::getAlias($this->migrationPath) . '/' . $migrationName . '.php',
+            $this->render('mass.php', $params)
+        );
+        return $files;
     }
-
 
     /**
      * Validates the [[tableName]] attribute.
@@ -397,7 +392,6 @@ class StructureGenerator extends \yii\gii\Generator
     public function validateTableName()
     {
         $tables = $this->prepareTables();
-
         if (empty($tables)) {
             $this->addError('tableName', "Table '{$this->tableName}' does not exist, or all tables was ignored");
             return false;
@@ -406,9 +400,11 @@ class StructureGenerator extends \yii\gii\Generator
     }
 
     /**
-     * @return array the table names that match the pattern specified by [[tableName]].
+     * List of table names that match the pattern specified by [[tableName]].
+     *
+     * @return array
      */
-    public function prepareTables()
+    protected function prepareTables()
     {
         $tables = [];
         $this->prepareIgnored();
@@ -419,27 +415,27 @@ class StructureGenerator extends \yii\gii\Generator
                 $tables[] = $this->tableName;
             }
         }
-        if (!empty($tables)) {
-            foreach ($tables as $goodTable) {
-                $prepared = $this->prepareTableName($goodTable);
-                if (!empty($prepared)) {
-                    $this->_tables = array_merge($this->_tables, $prepared);
-                }
-            }
-            foreach ($this->_tables as $i => $t) {
-                if (in_array($t, $this->_ignoredTables)) {
-                    unset($this->_tables[$i]);
-                }
+        if (empty($tables)) {
+            return [];
+        }
+        foreach ($tables as $goodTable) {
+            $prepared = $this->getTableResolver()->findTablesByPattern($goodTable);
+            $this->_tables = !empty($prepared) ? array_merge($this->_tables, $prepared) : [];
+        }
+        foreach ($this->_tables as $i => $t) {
+            if (in_array($t, $this->_ignoredTables)) {
+                unset($this->_tables[$i]);
             }
         }
-
         return $this->_tables;
     }
 
     /**
-     * @return array the table names that match the pattern specified by [[tableName]].
+     * List of table names that match the pattern specified by [[tableName]].
+     *
+     * @return array
      */
-    public function prepareIgnored()
+    protected function prepareIgnored()
     {
         $ignors = [];
         if ($this->tableIgnore) {
@@ -452,7 +448,7 @@ class StructureGenerator extends \yii\gii\Generator
         $ignors = array_filter($ignors, 'trim');
         if (!empty($ignors)) {
             foreach ($ignors as $ignoredTable) {
-                $prepared = $this->prepareTableName($ignoredTable);
+                $prepared = $this->getTableResolver()->findTablesByPattern($ignoredTable);
                 if (!empty($prepared)) {
                     $this->_ignoredTables = array_merge($this->_ignoredTables, $prepared);
                 }
@@ -462,61 +458,7 @@ class StructureGenerator extends \yii\gii\Generator
     }
 
     /**
-     * @param $tableName
-     *
-     * @return array
-     */
-    public function prepareTableName($tableName)
-    {
-        $prepared = [];
-        $tableName = trim($tableName);
-        $db = $this->getDbConnection();
-        if ($db === null) {
-            return $prepared;
-        }
-        if ($tableName == '*') {
-            foreach ($db->schema->getTableNames() as $table) {
-                $prepared[] = $table;
-            }
-        } elseif (strpos($tableName, '*') !== false) {
-            $schema = '';
-            $pattern = '/^' . str_replace('*', '\w+', $tableName) . '$/';
-
-            foreach ($db->schema->getTableNames($schema) as $table) {
-                if (preg_match($pattern, $table)) {
-                    $prepared[] = $table;
-                }
-            }
-        } elseif (($table = $db->getTableSchema($tableName, true)) !== null) {
-            $prepared[] = $tableName;
-        }
-        return $prepared;
-    }
-
-    /**
-     * @param $labelname
-     * @param $default
-     *
-     * @return mixed
-     */
-    public function getLabelDefaults($labelname, $default)
-    {
-        $defaults = [
-            'active' => 'Активно?',
-            'name' => 'Название',
-            'title' => 'Заголовок',
-            'created' => 'Создано',
-            'updated' => 'Обновлено'
-        ];
-        return isset($defaults[$labelname]) ? $defaults[$labelname] : $default;
-    }
-
-    /**
-     * Returns the root path to the default code template files.
-     * The default implementation will return the "templates" subdirectory of the
-     * directory containing the generator class file.
-     *
-     * @return string the root path to the default code template files.
+     * @inheritdoc
      */
     public function defaultTemplate()
     {
@@ -524,23 +466,4 @@ class StructureGenerator extends \yii\gii\Generator
 
         return dirname($class->getFileName()) . '/default_structure';
     }
-
-    /**
-     * Checks if any of the specified columns is auto incremental.
-     *
-     * @param  \yii\db\TableSchema $table the table schema
-     * @param  array               $columns columns to check for autoIncrement property
-     *
-     * @return boolean             whether any of the specified columns is auto incremental.
-     */
-    protected function isColumnAutoIncremental($table, $columns)
-    {
-        foreach ($columns as $column) {
-            if (isset($table->columns[$column]) && $table->columns[$column]->autoIncrement) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-} 
+}
