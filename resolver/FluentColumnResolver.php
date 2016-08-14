@@ -38,7 +38,7 @@ class FluentColumnResolver extends BaseColumnResolver
         $type = $column->type;
         $size = $column->size ? '(' . $column->size . ')' : '()';
         $default = $this->buildDefaultValue($column);
-        $nullable = $column->allowNull ? 'null()' : 'notNull()';
+        $nullable = $column->allowNull===true ? 'null()' : 'notNull()';
         $comment = $column->comment ? ("comment(" . $this->schema->quoteValue($column->comment) . ")") : '';
 
         return [$type, $size, $default, $nullable, $comment];

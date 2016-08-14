@@ -33,33 +33,31 @@ abstract class BaseColumnResolver implements IMigrationColumnResolver
      * @var TableSchema $tableSchema
      **/
     protected $tableSchema;
-    /**
-     * Other params for inherited class
-     * @var array $config
-    **/
-    protected $config = [];
 
 
     /**
      * BaseColumnResolver constructor.
      *
-     * @param \yii\db\Schema $schema
+     * @param \yii\db\Schema      $schema
      * @param \yii\db\TableSchema $tableSchema
-     * @param array $config  additional data
      */
-    public function __construct(Schema $schema, TableSchema $tableSchema, array $config = [])
+    public function __construct(Schema $schema, TableSchema $tableSchema)
     {
         $this->schema = $schema;
         $this->tableSchema = $tableSchema;
         $this->columnSchemaBuilder = $schema->createColumnSchemaBuilder('');
-        $this->config = $config;
     }
 
     /**
      * Method must return string of representation of  part of migration for current column name
      * @expect "string(255) NOT NULL DEFAULT 'example' COMMENT 'bla-bla'"
      * or "$this->string(255)->notNull()->defaultValue('example')->comment('bla-bla')"
-     *
+     * Method offer ability to create string representation for each database-type method
+     * create function named like 'resolve' . ucfirst($column->dbType) . 'Type'
+     * @example
+     *   resolveEnumType(ColumnSchema $column) or
+     *   resolvePolygonType(ColumnSchema $column) or
+     *   resolveArrayType(ColumnSchema $column) ... etc
      * @param string $columnName
      *
      * @return string
@@ -70,6 +68,9 @@ abstract class BaseColumnResolver implements IMigrationColumnResolver
          * @var ColumnSchema $column
          **/
         $column = $this->getTableSchema()->getColumn($columnName);
+        if (!$column->comment) {
+            $column->comment = $this->defaultCommentsByColumnName($column->name);
+        }
         $columnTypeMethod = 'resolve' . ucfirst($column->dbType) . 'Type';
         if (method_exists($this, $columnTypeMethod)) {
             \Yii::trace('try to call customMethod "' . $columnTypeMethod . '"', __METHOD__);
@@ -82,40 +83,25 @@ abstract class BaseColumnResolver implements IMigrationColumnResolver
     }
 
     /**
-     * @param \yii\db\ColumnSchema $column
-     *
-     * @return string
+     * @return \yii\db\TableSchema
      */
-    abstract protected function resolveString(ColumnSchema $column);
+    protected function getTableSchema()
+    {
+        return $this->tableSchema;
+    }
 
     /**
-     * @param \yii\db\ColumnSchema $column
+     * Override this method for preset default comment based on column name
+     *
+     * @param string $name
      *
      * @return string
-     */
-    abstract protected function resolveNumeric(ColumnSchema $column);
-
-    /**
-     * @param \yii\db\ColumnSchema $column
-     *
-     * @return string
-     */
-    abstract protected function resolveTime(ColumnSchema $column);
-
-    /**
-     * @param \yii\db\ColumnSchema $column
-     *
-     * @return string
-     */
-    abstract protected function resolvePk(ColumnSchema $column);
-
-    /**
-     * @param \yii\db\ColumnSchema $column
-     *
-     * @return string
-     */
-    abstract protected function resolveOther(ColumnSchema $column);
-
+     **/
+    protected function defaultCommentsByColumnName($name)
+    {
+        $defaults = [];
+        return ArrayHelper::getValue($defaults, $name, '');
+    }
 
     /**
      * @return \yii\db\ColumnSchemaBuilder
@@ -126,10 +112,49 @@ abstract class BaseColumnResolver implements IMigrationColumnResolver
     }
 
     /**
-     * @return \yii\db\TableSchema
+     * Resolve string-category columns
+     * @see ColumnSchemaBuilder->$categoryMap
+     * @param \yii\db\ColumnSchema $column
+     *
+     * @return string
      */
-    protected function getTableSchema()
-    {
-        return $this->tableSchema;
-    }
+    abstract protected function resolveString(ColumnSchema $column);
+
+    /**
+     * Resolve Numeric-category columns
+     * @see ColumnSchemaBuilder->$categoryMap
+     * @param \yii\db\ColumnSchema $column
+     *
+     * @return string
+     */
+    abstract protected function resolveNumeric(ColumnSchema $column);
+
+    /**
+     * Resolve time-category columns
+     * @see ColumnSchemaBuilder->$categoryMap
+     * @param \yii\db\ColumnSchema $column
+     *
+     * @return string
+     */
+    abstract protected function resolveTime(ColumnSchema $column);
+
+    /**
+     * Resolve pk-category columns
+     * @see ColumnSchemaBuilder->$categoryMap
+     * @param \yii\db\ColumnSchema $column
+     *
+     * @return string
+     */
+    abstract protected function resolvePk(ColumnSchema $column);
+
+    /**
+     * Resolve other-category columns
+     * @see ColumnSchemaBuilder->$categoryMap
+     * @param \yii\db\ColumnSchema $column
+     *
+     * @return string
+     */
+    abstract protected function resolveOther(ColumnSchema $column);
+
+
 }
