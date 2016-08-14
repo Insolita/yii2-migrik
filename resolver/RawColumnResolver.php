@@ -115,17 +115,6 @@ class RawColumnResolver extends BaseColumnResolver
     }
 
     /**
-     * @param \yii\db\ColumnSchema $column
-     *
-     * @return string
-     */
-    protected function resolvePk(ColumnSchema $column)
-    {
-        list($type, , , , $comment) = $this->resolveCommon($column);
-        return $type . ($comment ? '." ' . $comment . '"' : '');
-    }
-
-    /**
      * Resolve for Binary type
      *
      * @param \yii\db\ColumnSchema $column
@@ -150,7 +139,6 @@ class RawColumnResolver extends BaseColumnResolver
     {
         list(, , $default, $nullable, $comment) = $this->resolveCommon($column);
         if ($column->enumValues) {
-            $schema = $this->schema;
             $enum = "enum(" . implode(', ', array_map([$this->schema, 'quoteValue'], $column->enumValues)) . ")";
         } else {
             return "";
@@ -181,14 +169,34 @@ class RawColumnResolver extends BaseColumnResolver
      */
     protected function resolveNumeric(ColumnSchema $column)
     {
+        $pk = $this->tableSchema->primaryKey;
+        if (in_array($column->name, $pk)) {
+            if ($column->unsigned) {
+                $column->type = ($column->type == Schema::TYPE_BIGINT ? Schema::TYPE_UBIGPK : Schema::TYPE_UPK);
+            } else {
+                $column->type = ($column->type == Schema::TYPE_BIGINT ? Schema::TYPE_BIGPK : Schema::TYPE_PK);
+            }
+            return $this->resolvePk($column);
+        }
         list($type, $size, $default, $nullable, $comment) = $this->resolveCommon($column);
         if ($column->scale && $column->precision) {
             $size = '(' . $column->scale . ', ' . $column->precision . ')';
-        } elseif (!is_null($column->precision)) {
-            $size = '(, ' . $column->precision . ')';
+        } elseif ($column->precision) {
+            $size = '(' . $column->precision . ')';
         }
         $unsigned = $column->unsigned ? 'UNSIGNED' : '';
         return $this->buildString([$type, $size, $unsigned, $nullable, $default, $comment]);
+    }
+
+    /**
+     * @param \yii\db\ColumnSchema $column
+     *
+     * @return string
+     */
+    protected function resolvePk(ColumnSchema $column)
+    {
+        list($type, , , , $comment) = $this->resolveCommon($column);
+        return $type . ($comment ? '." ' . $comment . '"' : '');
     }
 
 }
