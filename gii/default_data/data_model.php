@@ -18,12 +18,10 @@ use <?=$generator->modelClass?>;
 
 class <?= $migrationName ?> extends Migration
 {
-    /**
-    * @param array|string|\yii\db\Connection $db
-    */
-    public function setDb($db)
+    public function init()
     {
-        $this->db = $db;
+        $this->db = 'db';
+        parent::init();
     }
 
     public function safeUp()
