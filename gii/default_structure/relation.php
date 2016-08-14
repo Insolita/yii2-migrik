@@ -19,28 +19,32 @@ class <?= $migrationName ?> extends Migration
 
     public function init()
     {
-       $this->db = 'db';
+       $this->db = '<?=$generator->db?>';
        parent::init();
     }
 
     public function safeUp()
     {
-    <?php if(!empty($tableRelations) && is_array($tableRelations)):?>
-    <?php foreach($tableRelations as $table):?>
-        <?php foreach($table['fKeys'] as $i=>$rel):?>
-    $this->addForeignKey('fk_<?=$table['tableName']?>_<?=$rel['pk']?>', '<?=$table['tableAlias']?>', '<?=$rel['pk']?>', '<?=$rel['ftable']?>', '<?=$rel['fk']?>');
+    <?php if (!empty($tableRelations) && is_array($tableRelations)) :?>
+        <?php foreach ($tableRelations as $table) :?>
+            <?php foreach ($table['fKeys'] as $i => $rel) :?>
+                $this->addForeignKey('fk_<?=$table['tableName']?>_<?=$rel['pk']?>',
+                '<?=$table['tableAlias']?>',
+                '<?=$rel['pk']?>',
+                '<?=$rel['ftable']?>',
+                '<?=$rel['fk']?>');
+            <?php endforeach;?>
         <?php endforeach;?>
-    <?php endforeach;?>
-<?php endif?>
+    <?php endif?>
     }
 
     public function safeDown()
     {
 
-<?php if(!empty($tableRelations) && is_array($tableRelations)):?>
-    <?php foreach($tableRelations as $table):?>
-        <?php foreach($table['fKeys'] as $i=>$rel):?>
-   $this->dropForeignKey('fk_<?=$table['tableName']?>_<?=$rel['pk']?>', '<?=$table['tableAlias']?>');
+<?php if (!empty($tableRelations) && is_array($tableRelations)) :?>
+    <?php foreach ($tableRelations as $table) :?>
+        <?php foreach ($table['fKeys'] as $i => $rel) :?>
+        $this->dropForeignKey('fk_<?=$table['tableName']?>_<?=$rel['pk']?>', '<?=$table['tableAlias']?>');
         <?php endforeach;?>
     <?php endforeach;?>
 <?php endif?>

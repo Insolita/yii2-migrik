@@ -6,7 +6,6 @@
 /** @var $migrationName string the new migration class name
  *  @var $tableAlias string table_name
  *  @var $tableName string table_name
- *  @var $tableSchema yii\db\TableSchema
  *  @var array $tableColumns
  *  @var array $tableIndexes
  *  @var array $tablePk
@@ -24,7 +23,7 @@ class <?= $migrationName ?> extends Migration
 
     public function init()
     {
-        $this->db = 'db';
+        $this->db = '<?=$generator->db?>';
         parent::init();
     }
 
@@ -35,24 +34,33 @@ class <?= $migrationName ?> extends Migration
         $this->createTable(
             '<?= ($generator->usePrefix)?$tableAlias:$tableName ?>',
             [
-                <?php foreach($tableColumns as $name=>$data):?>'<?=$name?>'=> <?=$data;?>,
+                <?php foreach ($tableColumns as $name => $data) :?>
+                    '<?=$name?>'=> <?=$data;?>,
                 <?php endforeach;?>
 ],
             $tableOptions
         );
-<?php if(!empty($tableIndexes) && is_array($tableIndexes)):?><?php foreach($tableIndexes as $name=>$data):?><?php if($name!='PRIMARY'):?>
-
-        $this->createIndex('<?=$name?>', '<?=$tableAlias?>','<?=implode(",",array_values($data['cols']))?>',<?=$data['isuniq']?>);<?php endif;?>
-<?php endforeach;?>
+<?php if (!empty($tableIndexes) && is_array($tableIndexes)) : ?>
+    <?php foreach ($tableIndexes as $name => $data) :?>
+        <?php if ($name!='PRIMARY') : ?>
+        $this->createIndex('<?=$name?>',
+            '<?=$tableAlias?>',
+            '<?=implode(",", array_values($data['cols']))?>',
+            <?=$data['isuniq']?>);
+        <?php endif;?>
+    <?php endforeach;?>
 <?php endif?>
-
     }
 
     public function safeDown()
     {
-<?php if(!empty($tableIndexes) && is_array($tableIndexes)):?><?php foreach($tableIndexes as $name=>$data):?><?php if($name!='PRIMARY'):?>
+<?php if (!empty($tableIndexes) && is_array($tableIndexes)) : ?>
+    <?php foreach ($tableIndexes as $name => $data) :?>
+        <?php if ($name!='PRIMARY') : ?>
         $this->dropIndex('<?=$name?>', '<?=$tableAlias?>');
-<?php endif;?><?php endforeach;?><?php endif?>
+        <?php endif;?>
+    <?php endforeach;?>
+<?php endif?>
         $this->dropTable('<?= ($generator->usePrefix)?$tableAlias:$tableName ?>');
     }
 }
