@@ -212,14 +212,6 @@ class StructureGenerator extends \yii\gii\Generator
     }
 
     /**
-     * @return array
-     */
-    public function getIgnoredTables()
-    {
-        return $this->_ignoredTables;
-    }
-
-    /**
      * @inheritdoc
      */
     public function generate()
@@ -229,6 +221,45 @@ class StructureGenerator extends \yii\gii\Generator
         } else {
             return $this->generateBulkMigration();
         }
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function defaultTemplate()
+    {
+        $class = new \ReflectionClass($this);
+
+        return dirname($class->getFileName()) . '/default_structure';
+    }
+
+    /**
+     * @return array
+     */
+    public function getIgnoredTables()
+    {
+        return $this->_ignoredTables;
+    }
+
+    /**
+     * @return array
+     */
+    public function getTables()
+    {
+        return $this->_tables;
+    }
+
+    /**
+     * Validates the [[tableName]] attribute.
+     */
+    public function validateTableName()
+    {
+        $tables = $this->prepareTables();
+        if (empty($tables)) {
+            $this->addError('tableName', "Table '{$this->tableName}' does not exist, or all tables was ignored");
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -270,11 +301,39 @@ class StructureGenerator extends \yii\gii\Generator
     }
 
     /**
-     * @return array
+     * @return CodeFile[]
      */
-    public function getTables()
+    protected function generateBulkMigration()
     {
-        return $this->_tables;
+        $i = 10;
+        $files = [];
+        $allRelations = [];
+        $allTables = [];
+        foreach ($this->getTables() as $tableName) {
+            $i++;
+            list(, $tableAlias, $tableIndexes, $tableColumns, $tableRelations)
+                = $this->collectTableInfo($tableName);
+            $allRelations[] = $tableRelations;
+            $allTables[] = [
+                'alias' => $tableAlias,
+                'indexes' => $tableIndexes,
+                'columns' => $tableColumns,
+                'name' => $tableName
+            ];
+        }
+        $i++;
+        //$migrationName='m' . gmdate('ymd_His') . '_Mass';
+        $migrationName = 'm' . gmdate('ymd_Hi' . $i) . '_Mass';
+        $params = [
+            'tableList' => $allTables,
+            'tableRelations' => $allRelations,
+            'migrationName' => $migrationName
+        ];
+        $files[] = new CodeFile(
+            Yii::getAlias($this->migrationPath) . '/' . $migrationName . '.php',
+            $this->render('mass.php', $params)
+        );
+        return $files;
     }
 
     /**
@@ -351,55 +410,6 @@ class StructureGenerator extends \yii\gii\Generator
     }
 
     /**
-     * @return CodeFile[]
-     */
-    protected function generateBulkMigration()
-    {
-        $i = 10;
-        $files = [];
-        $allRelations = [];
-        $allTables = [];
-        foreach ($this->getTables() as $tableName) {
-            $i++;
-            list(, $tableAlias, $tableIndexes, $tableColumns, $tableRelations)
-                = $this->collectTableInfo($tableName);
-            $allRelations[] = $tableRelations;
-            $allTables[] = [
-                'alias' => $tableAlias,
-                'indexes' => $tableIndexes,
-                'columns' => $tableColumns,
-                'name' => $tableName
-            ];
-        }
-        $i++;
-        //$migrationName='m' . gmdate('ymd_His') . '_Mass';
-        $migrationName = 'm' . gmdate('ymd_Hi' . $i) . '_Mass';
-        $params = [
-            'tableList' => $allTables,
-            'tableRelations' => $allRelations,
-            'migrationName' => $migrationName
-        ];
-        $files[] = new CodeFile(
-            Yii::getAlias($this->migrationPath) . '/' . $migrationName . '.php',
-            $this->render('mass.php', $params)
-        );
-        return $files;
-    }
-
-    /**
-     * Validates the [[tableName]] attribute.
-     */
-    public function validateTableName()
-    {
-        $tables = $this->prepareTables();
-        if (empty($tables)) {
-            $this->addError('tableName', "Table '{$this->tableName}' does not exist, or all tables was ignored");
-            return false;
-        }
-        return true;
-    }
-
-    /**
      * List of table names that match the pattern specified by [[tableName]].
      *
      * @return array
@@ -455,15 +465,5 @@ class StructureGenerator extends \yii\gii\Generator
             }
         }
         return $this->_ignoredTables;
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function defaultTemplate()
-    {
-        $class = new \ReflectionClass($this);
-
-        return dirname($class->getFileName()) . '/default_structure';
     }
 }
