@@ -57,7 +57,7 @@ class FluentColumnResolverTest extends DbTestCase
                         'dbType' => 'text'
                     ]
                 ),
-                'expect' => '$this->text()->notNull()->default("blabla")'
+                'expect' => '$this->text()->notNull()->defaultValue(\'blabla\')'
             ],
             [
                 'col' => new ColumnSchema(
@@ -68,7 +68,7 @@ class FluentColumnResolverTest extends DbTestCase
                         'dbType' => 'char'
                     ]
                 ),
-                'expect' => '$this->string()->null()->comment("Some comment")'
+                'expect' => '$this->string()->null()->defaultValue(null)->comment(\'Some comment\')'
             ],
 
         ];
@@ -105,7 +105,7 @@ class FluentColumnResolverTest extends DbTestCase
             $tschema = $this->getMockBuilder(TableSchema::class)->getMock();
             $tschema->expects($this->once())->method('getColumn')->willReturn($testItem['col']);
             $cbuilder = $this->getMockBuilder(ColumnSchemaBuilder::class)->disableOriginalConstructor()->getMock();
-            $resolver = new ColumnResolver($tschema, $cbuilder, $schema);
+            $resolver = new FluentColumnResolver($tschema, $cbuilder, $schema);
             $string = $resolver->resolveColumn('col');
             verify($string)->equals($testItem['expect']);
         }
@@ -123,7 +123,7 @@ class FluentColumnResolverTest extends DbTestCase
                         'defaultValue' => true
                     ]
                 ),
-                'expect' => '$this->boolean()->default(true)'
+                'expect' => '$this->boolean()->null()->defaultValue(true)'
             ],
             [
                 'col' => new ColumnSchema(
@@ -134,7 +134,7 @@ class FluentColumnResolverTest extends DbTestCase
                         'defaultValue' => false
                     ]
                 ),
-                'expect' => '$this->boolean()->notNull()->default(false)'
+                'expect' => '$this->boolean()->notNull()->defaultValue(false)'
             ],
             [
                 'col' => new ColumnSchema(
@@ -156,7 +156,7 @@ class FluentColumnResolverTest extends DbTestCase
                         'dbType' => 'decimal'
                     ]
                 ),
-                'expect' => '$this->decimal(8, 2)->notNull()->default(340.23)'
+                'expect' => '$this->decimal(8, 2)->notNull()->defaultValue("340.23")'
             ],
             [
                 'col' => new ColumnSchema(
@@ -168,7 +168,7 @@ class FluentColumnResolverTest extends DbTestCase
                         'dbType' => 'float'
                     ]
                 ),
-                'expect' => '$this->float(, 3)->unsigned()->notNull()->default(340.213)'
+                'expect' => '$this->float(, 3)->unsigned()->notNull()->defaultValue("340.213")'
             ],
 
         ];
@@ -178,7 +178,7 @@ class FluentColumnResolverTest extends DbTestCase
             $tschema = $this->getMockBuilder(TableSchema::class)->getMock();
             $tschema->expects($this->once())->method('getColumn')->willReturn($testItem['col']);
             $cbuilder = $this->getMockBuilder(ColumnSchemaBuilder::class)->disableOriginalConstructor()->getMock();
-            $resolver = new ColumnResolver($tschema, $cbuilder, $schema);
+            $resolver = new FluentColumnResolver($tschema, $cbuilder, $schema);
             $string = $resolver->resolveColumn('col');
             verify($string)->equals($testItem['expect']);
         }
@@ -217,7 +217,7 @@ class FluentColumnResolverTest extends DbTestCase
             $tschema = $this->getMockBuilder(TableSchema::class)->getMock();
             $tschema->expects($this->once())->method('getColumn')->willReturn($testItem['col']);
             $cbuilder = $this->getMockBuilder(ColumnSchemaBuilder::class)->disableOriginalConstructor()->getMock();
-            $resolver = new ColumnResolver($tschema, $cbuilder, $schema);
+            $resolver = new FluentColumnResolver($tschema, $cbuilder, $schema);
             $string = $resolver->resolveColumn('col');
             verify($string)->equals($testItem['expect']);
         }
@@ -236,7 +236,7 @@ class FluentColumnResolverTest extends DbTestCase
                         'defaultValue' => 'two'
                     ]
                 ),
-                'expect' => '$this->string()->null()->default("two")'
+                'expect' => '$this->string()->null()->defaultValue(\'two\')'
             ]
 
         ];
@@ -246,7 +246,7 @@ class FluentColumnResolverTest extends DbTestCase
             $tschema = $this->getMockBuilder(TableSchema::class)->getMock();
             $tschema->expects($this->once())->method('getColumn')->willReturn($testItem['col']);
             $cbuilder = $this->getMockBuilder(ColumnSchemaBuilder::class)->disableOriginalConstructor()->getMock();
-            $resolver = new ColumnResolver($tschema, $cbuilder, $schema);
+            $resolver = new FluentColumnResolver($tschema, $cbuilder, $schema);
             $string = $resolver->resolveColumn('col');
             verify($string)->equals($testItem['expect']);
         }

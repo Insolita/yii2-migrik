@@ -7,6 +7,7 @@ namespace insolita\migrik\resolver;
 
 
 use yii\db\ColumnSchema;
+use yii\helpers\StringHelper;
 
 /**
  * Class FluentColumnResolver
@@ -75,7 +76,7 @@ class FluentColumnResolver extends BaseColumnResolver
             && (StringHelper::startsWith($column->defaultValue, "CURRENT")
                 or StringHelper::startsWith($column->defaultValue, "LOCAL")
             )) {
-            $default = 'defaultExpression('.$column->defaultValue.')';
+            $default = 'defaultExpression("'.$column->defaultValue.'")';
         }
         return $this->buildString([$type . $size, $nullable, $default, $comment]);
     }
@@ -112,6 +113,7 @@ class FluentColumnResolver extends BaseColumnResolver
      **/
     protected function buildString(array $columnParts)
     {
+        array_unshift($columnParts, '$this');
         return implode('->', array_filter(array_map('trim', $columnParts), 'trim'));
     }
 
@@ -122,7 +124,7 @@ class FluentColumnResolver extends BaseColumnResolver
     protected function buildDefaultValue(ColumnSchema $column)
     {
         if ($column->defaultValue === null) {
-            return $column->allowNull === true ? 'default(null)' : '';
+            return $column->allowNull === true ? 'defaultValue(null)' : '';
         }
 
         switch (gettype($column->defaultValue)) {
@@ -137,7 +139,7 @@ class FluentColumnResolver extends BaseColumnResolver
                 $string = $column->defaultValue ? 'defaultValue(true)' : 'defaultValue(false)';
                 break;
             case 'object':
-                $string = 'defaultExpression('.(string) $column->defaultValue.')';
+                $string = 'defaultExpression("'.(string) $column->defaultValue.'")';
                 break;
             default:
                 $string = "defaultValue('{$column->defaultValue}')";
