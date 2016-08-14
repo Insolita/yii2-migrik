@@ -18,6 +18,14 @@ use yii\db\Migration;
 
 class <?= $migrationName ?> extends Migration
 {
+    /**
+    * @param array|string|\yii\db\Connection $db
+    */
+    public function setDb($db)
+    {
+        $this->db = $db;
+    }
+
     public function safeUp()
     {
         $tableOptions = '<?=$generator->tableOptions?>';
