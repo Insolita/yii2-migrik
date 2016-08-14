@@ -34,32 +34,28 @@ class <?= $migrationName ?> extends Migration
         $this->createTable(
             '<?= ($generator->usePrefix)?$tableAlias:$tableName ?>',
             [
-                <?php foreach ($tableColumns as $name => $data) :?>
-                    '<?=$name?>'=> <?=$data;?>,
-                <?php endforeach;?>
-],
-            $tableOptions
+<?php foreach ($tableColumns as $name => $data) :?>
+                '<?=$name?>'=> <?=$data;?>,
+<?php endforeach;?>
+            ],$tableOptions
         );
 <?php if (!empty($tableIndexes) && is_array($tableIndexes)) : ?>
-    <?php foreach ($tableIndexes as $name => $data) :?>
-        <?php if ($name!='PRIMARY') : ?>
-        $this->createIndex('<?=$name?>',
-            '<?=$tableAlias?>',
-            '<?=implode(",", array_values($data['cols']))?>',
-            <?=$data['isuniq']?>);
-        <?php endif;?>
-    <?php endforeach;?>
+<?php foreach ($tableIndexes as $name => $data) :?>
+<?php if ($name!='PRIMARY') : ?>
+        $this->createIndex('<?=$name?>','<?=$tableAlias?>','<?=implode(",", array_values($data['cols']))?>',<?=$data['isuniq']?'true':'false'?>);
+<?php endif;?>
+<?php endforeach;?>
 <?php endif?>
     }
 
     public function safeDown()
     {
 <?php if (!empty($tableIndexes) && is_array($tableIndexes)) : ?>
-    <?php foreach ($tableIndexes as $name => $data) :?>
-        <?php if ($name!='PRIMARY') : ?>
+<?php foreach ($tableIndexes as $name => $data) :?>
+<?php if ($name!='PRIMARY') : ?>
         $this->dropIndex('<?=$name?>', '<?=$tableAlias?>');
-        <?php endif;?>
-    <?php endforeach;?>
+<?php endif;?>
+<?php endforeach;?>
 <?php endif?>
         $this->dropTable('<?= ($generator->usePrefix)?$tableAlias:$tableName ?>');
     }
