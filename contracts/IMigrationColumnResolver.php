@@ -20,9 +20,8 @@ interface IMigrationColumnResolver
      *
      * @param \yii\db\Schema $schema
      * @param \yii\db\TableSchema $tableSchema
-     * @param array $config  additional data
      */
-    public function __construct(Schema $schema, TableSchema $tableSchema, array $config = []);
+    public function __construct(Schema $schema, TableSchema $tableSchema);
 
     /**
      * Method must return string of representation of  part of migration for current column name

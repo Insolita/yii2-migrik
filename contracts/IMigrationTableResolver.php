@@ -5,31 +5,51 @@
 
 namespace insolita\migrik\contracts;
 
-use yii\db\Schema;
-use yii\db\TableSchema;
+use yii\db\Connection;
 
 /**
- * Interface IMigrationColumnResolver
+ * Interface IMigrationTableResolver
  *
  * @package insolita\migrik\contracts
  */
-interface IMigrationColumnResolver
+interface IMigrationTableResolver
 {
     /**
      * Base constructor.
      *
-     * @param \yii\db\Schema $schema
-     * @param \yii\db\TableSchema $tableSchema
+     * @param Connection $connection
      */
-    public function __construct(Schema $schema, TableSchema $tableSchema);
+    public function __construct(Connection $connection);
 
     /**
-     * Method must return string of representation of  part of migration for current column name
-     * @expect "string(255) NOT NULL DEFAULT 'example' COMMENT 'bla-bla'"
-     * or "$this->string(255)->notNull()->defaultValue('example')->comment('bla-bla')"
-     * @param string $columnName
-     * @return string
+     * @param string $tablePattern
+     *
+     * @return array
+     **/
+    public function findTablesByPattern($tablePattern);
+
+    /**
+     * @return array
+     **/
+    public function getTableNames();
+
+    /**
+     * @param $tableName
+     *
+     * @return TableSchema
+     */
+    public function getTableSchema($tableName);
+
+    /**
+     * @param string $tableName
+     * @return array
     **/
-    public function resolveColumn($columnName);
+    public function getRelations($tableName);
+
+    /**
+     * @param string $tableName
+     * @return array
+    **/
+    public function getIndexes($tableName);
 
 }
