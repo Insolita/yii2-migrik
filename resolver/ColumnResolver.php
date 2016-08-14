@@ -109,22 +109,6 @@ class ColumnResolver extends BaseColumnResolver
     }
 
     /**
-     * @param \yii\db\ColumnSchema $column
-     *
-     * @return string
-     */
-    protected function resolveSetType(ColumnSchema $column)
-    {
-        list(, $size, $default, $nullable, $comment) = $this->resolveCommon($column);
-        $type = 'set';
-        if ($column->enumValues) {
-            $size = "('" . implode("','", $column->enumValues) . "')";
-        }
-        return $this->buildString([$type . $size, $nullable, $default, $comment]);
-    }
-
-
-    /**
      * Resolve tinyint(1) as boolean
      *
      * @param \yii\db\ColumnSchema $column
