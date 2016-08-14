@@ -75,6 +75,7 @@ class StructureGenerator extends \yii\gii\Generator
      */
     private $_tables = [];
 
+
     /**
      * @inheritdoc
      */
@@ -221,7 +222,7 @@ class StructureGenerator extends \yii\gii\Generator
                 $tableSchema = $db->getTableSchema($tableName);
                 $tableCaption = $this->getTableCaption($tableName);
                 $tableAlias = $this->getTableAlias($tableCaption);
-                $tableIndexes = $this->genmode == 'schema' ? null : $this->generateIndexes($tableName);
+                $tableIndexes = $this->genmode == 'schema' ? null : $this->generateIndexes($tableName, $tableSchema);
                 $tableColumns = $this->columnsBySchema($tableSchema);
                 $tableRelations[] = [
                     'fKeys' => $this->generateRelations($tableSchema),
@@ -259,7 +260,7 @@ class StructureGenerator extends \yii\gii\Generator
                 $tableSchema = $db->getTableSchema($tableName);
                 $tableCaption = $this->getTableCaption($tableName);
                 $tableAlias = $this->getTableAlias($tableCaption);
-                $tableIndexes = $this->generateIndexes($tableName);
+                $tableIndexes = $this->generateIndexes($tableName, $tableSchema);
                 $tableColumns = $this->columnsBySchema($tableSchema);
                 $tableRelations[] = [
                     'fKeys' => $this->generateRelations($tableSchema),
@@ -303,7 +304,7 @@ class StructureGenerator extends \yii\gii\Generator
      *
      * @return array
      */
-    public function generateIndexes($tableName)
+    public function generateIndexes($tableName, $tableSchema)
     {
         $indexes = [];
         $schema = $this->getDbConnection()->getSchema();
@@ -317,7 +318,7 @@ class StructureGenerator extends \yii\gii\Generator
                 }
             }
         } elseif (method_exists($schema, 'findUniqueIndexes')) {
-            $schemaIndexes = call_user_func([$schema, 'findUniqueIndexes']);
+            $schemaIndexes = call_user_func([$schema, 'findUniqueIndexes'], $tableSchema);
             if (!empty($schemaIndexes)) {
                 foreach ($schemaIndexes as $indexName => $columns) {
                     $indexes[$indexName]['cols'] = $columns;
@@ -331,16 +332,15 @@ class StructureGenerator extends \yii\gii\Generator
     }
 
     /**
-     * @param $schema
+     * @param $tableSchema
      *
      * @return array
      */
-    public function columnsBySchema($schema)
+    public function columnsBySchema(TableSchema $tableSchema)
     {
         $cols = [];
-        $resolver = $this->createResolver();
-        /**@var TableSchema $schema * */
-        foreach ($schema->columns as $column) {
+        $resolver = $this->createResolver($tableSchema);
+        foreach ($tableSchema->columns as $column) {
             $type = $resolver->resolveColumn($column->name);
             $cols[$column->name] = $type;
         }
