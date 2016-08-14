@@ -26,7 +26,7 @@ class RawColumnResolver extends BaseColumnResolver
     protected function resolveString(ColumnSchema $column)
     {
         list($type, $size, $default, $nullable, $comment) = $this->resolveCommon($column);
-        return $this->buildString([$type . $size, $nullable, $default, $comment]);
+        return $this->buildString([$type, $size, $nullable, $default, $comment]);
     }
 
     /**
@@ -36,7 +36,7 @@ class RawColumnResolver extends BaseColumnResolver
      */
     protected function resolveCommon(ColumnSchema $column)
     {
-        $type = $column->type;
+        $type = 'Schema::TYPE_' . strtoupper($column->type);
         $size = $column->size ? '(' . $column->size . ')' : '';
         $default = $this->buildDefaultValue($column);
         $nullable = $column->allowNull ? '' : 'NOT NULL';
@@ -85,7 +85,11 @@ class RawColumnResolver extends BaseColumnResolver
      **/
     protected function buildString(array $columnParts)
     {
-        return implode(' ', array_filter(array_map('trim', $columnParts), 'trim'));
+        $type = array_shift($columnParts);
+        $size = array_shift($columnParts);
+        $columnParts = implode(' ', array_filter(array_map('trim', $columnParts), 'trim'));
+        return (!empty($type) ? $type : '') . (!empty($columnParts) ? '."' . ($size ? $size . ' ' : ' ') . $columnParts
+            . '"' : '');
     }
 
     /**
@@ -100,15 +104,14 @@ class RawColumnResolver extends BaseColumnResolver
             $size = '(' . $column->precision . ')';
         }
         if ($column->defaultValue
-            && (StringHelper::startsWith($column->defaultValue, "CURRENT")
-                or StringHelper::startsWith(
+            && (StringHelper::startsWith($column->defaultValue, "CURRENT") or StringHelper::startsWith(
                     $column->defaultValue,
                     "LOCAL"
                 ))
         ) {
             $default = 'DEFAULT ' . $column->defaultValue;
         }
-        return $this->buildString([$type . $size, $nullable, $default, $comment]);
+        return $this->buildString([$type, $size, $nullable, $default, $comment]);
     }
 
     /**
@@ -119,7 +122,7 @@ class RawColumnResolver extends BaseColumnResolver
     protected function resolvePk(ColumnSchema $column)
     {
         list($type, , , , $comment) = $this->resolveCommon($column);
-        return $this->buildString([$type, $comment]);
+        return $type . ($comment ? '." ' . $comment . '"' : '');
     }
 
     /**
@@ -135,7 +138,7 @@ class RawColumnResolver extends BaseColumnResolver
         if ($column->precision) {
             $size = '(' . $column->precision . ')';
         }
-        return $this->buildString([$type . $size, $nullable, $default, $comment]);
+        return $this->buildString([$type, $size, $nullable, $default, $comment]);
     }
 
     /**
@@ -145,21 +148,15 @@ class RawColumnResolver extends BaseColumnResolver
      */
     protected function resolveEnumType(ColumnSchema $column)
     {
-        list(, $size, $default, $nullable, $comment) = $this->resolveCommon($column);
-        $type = 'enum';
+        list(, , $default, $nullable, $comment) = $this->resolveCommon($column);
         if ($column->enumValues) {
             $schema = $this->schema;
-            $size = "(" . implode(
-                    ', ',
-                    array_map(
-                        function ($v) use ($schema) {
-                            return $schema->quoteValue($v);
-                        },
-                        $column->enumValues
-                    )
-                ) . ")";
+            $enum = "enum(" . implode(', ', array_map([$this->schema, 'quoteValue'], $column->enumValues)) . ")";
+        } else {
+            return "";
         }
-        return $this->buildString([$type . $size, $nullable, $default, $comment]);
+        $columns = implode(' ', array_filter(array_map('trim', [$nullable, $default, $comment]), 'trim'));
+        return '"' . $enum . ' ' . $columns . '"';
     }
 
     /**
@@ -191,7 +188,7 @@ class RawColumnResolver extends BaseColumnResolver
             $size = '(, ' . $column->precision . ')';
         }
         $unsigned = $column->unsigned ? 'UNSIGNED' : '';
-        return $this->buildString([$type . $size, $unsigned, $nullable, $default, $comment]);
+        return $this->buildString([$type, $size, $unsigned, $nullable, $default, $comment]);
     }
 
 }

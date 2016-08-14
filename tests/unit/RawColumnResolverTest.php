@@ -178,7 +178,7 @@ class RawColumnResolverTest extends DbTestCase
                 'col' => new ColumnSchema(
                     ['type' => Schema::TYPE_TEXT, 'allowNull' => false, 'dbType' => 'text', 'size' => 1000]
                 ),
-                'expect' => Schema::TYPE_TEXT . '(1000) NOT NULL'
+                'expect' => 'Schema::TYPE_TEXT' . '."(1000) NOT NULL"'
             ],
             [
                 'col' => new ColumnSchema(
@@ -189,7 +189,7 @@ class RawColumnResolverTest extends DbTestCase
                         'dbType' => 'text'
                     ]
                 ),
-                'expect' => Schema::TYPE_TEXT . " NOT NULL DEFAULT 'blabla'"
+                'expect' => 'Schema::TYPE_TEXT' . '." NOT NULL DEFAULT \'blabla\'"'
             ],
             [
                 'col' => new ColumnSchema(
@@ -200,7 +200,7 @@ class RawColumnResolverTest extends DbTestCase
                         'dbType' => 'char'
                     ]
                 ),
-                'expect' => Schema::TYPE_STRING . " DEFAULT NULL COMMENT 'Some comment'"
+                'expect' => 'Schema::TYPE_STRING' . '." DEFAULT NULL COMMENT \'Some comment\'"'
             ],
 
         ];
@@ -225,11 +225,11 @@ class RawColumnResolverTest extends DbTestCase
                 'col' => new ColumnSchema(
                     ['type' => Schema::TYPE_PK, 'allowNull' => true, 'dbType' => 'string', 'size' => 1000]
                 ),
-                'expect' => Schema::TYPE_PK
+                'expect' => 'Schema::TYPE_PK'
             ],
             [
                 'col' => new ColumnSchema(['type' => Schema::TYPE_UBIGPK, 'comment' => 'It`s really big']),
-                'expect' => Schema::TYPE_UBIGPK . " COMMENT 'It`s really big'"
+                'expect' => 'Schema::TYPE_UBIGPK' . '." COMMENT \'It`s really big\'"'
             ]
 
         ];
@@ -259,7 +259,7 @@ class RawColumnResolverTest extends DbTestCase
                         'defaultValue' => true
                     ]
                 ),
-                'expect' => Schema::TYPE_BOOLEAN . " DEFAULT TRUE"
+                'expect' => 'Schema::TYPE_BOOLEAN'. '." DEFAULT TRUE"'
             ],
             [
                 'col' => new ColumnSchema(
@@ -270,7 +270,7 @@ class RawColumnResolverTest extends DbTestCase
                         'defaultValue' => false
                     ]
                 ),
-                'expect' => Schema::TYPE_BOOLEAN . " NOT NULL DEFAULT FALSE"
+                'expect' => 'Schema::TYPE_BOOLEAN' . '." NOT NULL DEFAULT FALSE"'
             ],
             [
                 'col' => new ColumnSchema(
@@ -279,7 +279,7 @@ class RawColumnResolverTest extends DbTestCase
                         'dbType' => 'bool'
                     ]
                 ),
-                'expect' => Schema::TYPE_BOOLEAN . " NOT NULL"
+                'expect' => 'Schema::TYPE_BOOLEAN' . '." NOT NULL"'
             ],
 
             [
@@ -292,7 +292,7 @@ class RawColumnResolverTest extends DbTestCase
                         'dbType' => 'decimal'
                     ]
                 ),
-                'expect' => Schema::TYPE_DECIMAL . "(8, 2) NOT NULL DEFAULT 340.23"
+                'expect' => 'Schema::TYPE_DECIMAL' .'."(8, 2) NOT NULL DEFAULT 340.23"'
             ],
             [
                 'col' => new ColumnSchema(
@@ -304,7 +304,7 @@ class RawColumnResolverTest extends DbTestCase
                         'dbType' => 'float'
                     ]
                 ),
-                'expect' => Schema::TYPE_FLOAT . "(, 3) UNSIGNED NOT NULL DEFAULT 340.213"
+                'expect' => 'Schema::TYPE_FLOAT' . '."(, 3) UNSIGNED NOT NULL DEFAULT 340.213"'
             ],
 
         ];
@@ -334,7 +334,7 @@ class RawColumnResolverTest extends DbTestCase
                         'defaultValue' => 'CURRENT_DATE'
                     ]
                 ),
-                'expect' => Schema::TYPE_DATE . " NOT NULL DEFAULT CURRENT_DATE"
+                'expect' => 'Schema::TYPE_DATE' . '." NOT NULL DEFAULT CURRENT_DATE"'
             ],
             [
                 'col' => new ColumnSchema(
@@ -346,7 +346,7 @@ class RawColumnResolverTest extends DbTestCase
                         'defaultValue' => new Expression('NOW()')
                     ]
                 ),
-                'expect' => Schema::TYPE_DATETIME . "(0) NOT NULL DEFAULT NOW()"
+                'expect' => 'Schema::TYPE_DATETIME' . '."(0) NOT NULL DEFAULT NOW()"'
             ]
         ];
 
@@ -376,7 +376,7 @@ class RawColumnResolverTest extends DbTestCase
                         'defaultValue' => 'two'
                     ]
                 ),
-                'expect' => "enum('one', 'two', 'three') DEFAULT 'two'"
+                'expect' => '"enum(\'one\', \'two\', \'three\') DEFAULT \'two\'"'
             ]
 
         ];

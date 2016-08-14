@@ -7,6 +7,7 @@
  */
 namespace insolita\migrik\gii;
 
+use insolita\migrik\contracts\IMigrationColumnResolver;
 use insolita\migrik\resolver\RawColumnResolver;
 use insolita\migrik\resolver\FluentColumnResolver;
 use Yii;
@@ -340,13 +341,17 @@ class StructureGenerator extends \yii\gii\Generator
         $resolver = $this->createResolver();
         /**@var TableSchema $schema * */
         foreach ($schema->columns as $column) {
-            $type = $this->getColumnType($column);
+            $type = $resolver->resolveColumn($column->name);
             $cols[$column->name] = $type;
         }
         return $cols;
     }
 
-    protected function createResolver($tableSchema)
+    /**
+     * @param TableSchema $tableSchema
+     * @return IMigrationColumnResolver
+    **/
+    protected function createResolver(TableSchema $tableSchema)
     {
         $params = [
             $this->getDbConnection()->schema,
@@ -359,44 +364,6 @@ class StructureGenerator extends \yii\gii\Generator
         } else {
             return Yii::createObject(['class' => RawColumnResolver::class], $params);
         }
-    }
-
-    /**
-     * @param $col
-     *
-     * @return string
-     */
-    public function getColumnType($col)
-    {
-        $coldata = $append = '';
-        /**@var \yii\db\ColumnSchema $col * */
-        if ($col->autoIncrement) {
-            $coldata = $col->type !== Schema::TYPE_BIGINT ? 'Schema::TYPE_PK' : 'Schema::TYPE_BIGPK';
-        } elseif (strpos($col->dbType, 'set(') !== false) {
-            $coldata = '"' . $col->dbType . '"';
-        } elseif (strpos($col->dbType, 'enum(') !== false) {
-            $coldata = '"' . $col->dbType . '"';
-        } elseif ($col->dbType === 'tinyint(1)') {
-            $coldata = 'Schema::TYPE_BOOLEAN';
-        } else {
-            $coldata = 'Schema::TYPE_' . strtoupper($col->type);
-        }
-
-        if ($col->size && !$col->autoIncrement) {
-            $append .= ($col->scale) ? '(' . $col->size . ',' . $col->scale . ')' : '(' . $col->size . ')';
-        }
-        $append .= ($col->unsigned && !$col->autoIncrement) ? ' unsigned' : '';
-        $append .= (!$col->allowNull && !$col->autoIncrement) ? ' NOT NULL' : '';
-
-        if (!is_null($col->defaultValue)) {
-            $append .= " DEFAULT " . ($col->defaultValue instanceof Expression ? $col->defaultValue->expression
-                    : "'" . $col->defaultValue . "'");
-        }
-        if (!empty($col->comment)) {
-            $append .= " COMMENT '" . $col->comment . "'";
-        }
-
-        return $coldata . '."' . $append . '"';
     }
 
     /**
