@@ -166,4 +166,36 @@ class ColumnResolver extends BaseColumnResolver
         return implode(' ', array_filter(array_map('trim', $columnParts), 'trim'));
     }
 
+    /**
+     * Builds the default value specification for the column.
+     * @return string string with default value of column.
+     */
+    protected function buildDefaultValue(ColumnSchema $column)
+    {
+        if ($column->defaultValue === null) {
+            return $column->allowNull === true ? ' DEFAULT NULL' : '';
+        }
+
+        $string = 'DEFAULT ';
+        switch (gettype($column->defaultValue)) {
+            case 'integer':
+                $string .= (string) $column->defaultValue;
+                break;
+            case 'double':
+                // ensure type cast always has . as decimal separator in all locales
+                $string .= str_replace(',', '.', (string) $column->defaultValue);
+                break;
+            case 'boolean':
+                $string .= $column->defaultValue ? 'TRUE' : 'FALSE';
+                break;
+            case 'object':
+                $string .= (string) $column->defaultValue;
+                break;
+            default:
+                $string .= "'{$column->defaultValue}'";
+        }
+
+        return $string;
+    }
+
 }
