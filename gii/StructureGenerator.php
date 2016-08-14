@@ -7,6 +7,8 @@
  */
 namespace insolita\migrik\gii;
 
+use insolita\migrik\resolver\RawColumnResolver;
+use insolita\migrik\resolver\FluentColumnResolver;
 use Yii;
 use yii\db\Expression;
 use yii\db\Schema;
@@ -47,7 +49,7 @@ class StructureGenerator extends \yii\gii\Generator
     public $genmode = 'single';
     /**
      * @var string
-    **/
+     **/
     public $format = 'fluent';
 
     /**
@@ -97,8 +99,8 @@ class StructureGenerator extends \yii\gii\Generator
         return array_merge(
             parent::rules(),
             [
-                [['db', 'tableName', 'tableIgnore','resolverClass'], 'filter', 'filter' => 'trim'],
-                [['db', 'tableName','format'], 'required'],
+                [['db', 'tableName', 'tableIgnore', 'resolverClass'], 'filter', 'filter' => 'trim'],
+                [['db', 'tableName', 'format'], 'required'],
                 [['db'], 'match', 'pattern' => '/^\w+$/', 'message' => 'Only word characters are allowed.'],
                 [
                     ['tableName', 'tableIgnore'],
@@ -148,8 +150,8 @@ class StructureGenerator extends \yii\gii\Generator
                 'usePrefix' => 'Replace table prefix',
                 'genmode' => 'Generation Mode',
                 'tableOptions' => 'Table Options',
-                'format' =>'Format of column definition',
-                'resolverClass'=>'Custom ColumnResolver class'
+                'format' => 'Format of column definition',
+                'resolverClass' => 'Custom RawColumnResolver class'
             ]
         );
     }
@@ -169,9 +171,9 @@ class StructureGenerator extends \yii\gii\Generator
                 'usePrefix' => 'Use Table Prefix Replacer eg.{{%tablename}} instead of prefix_tablename',
                 'genmode' => 'All tables in separated files, or all in one file',
                 'tableOptions' => 'Table Options',
-                'format'=>'fluent - like $this->text()->notNull()->defaultValue("foo") or raw "TEXT NOT NULL DEFAULT 
+                'format' => 'fluent - like $this->text()->notNull()->defaultValue("foo") or raw "TEXT NOT NULL DEFAULT 
                 \"foo\"" if custom resolver class configured, this option will be ignored',
-                'resolverClass'=>'Full-qualified class name for custom implementation of 
+                'resolverClass' => 'Full-qualified class name for custom implementation of 
                 \insolita\migrik\contracts\IMigrationColumnResolver'
             ]
         );
@@ -279,8 +281,7 @@ class StructureGenerator extends \yii\gii\Generator
                 'migrationName' => $migrationName
             ];
             $files[] = new CodeFile(
-                Yii::getAlias($this->migrationPath) . '/' . $migrationName . '.php',
-                $this->render('mass.php', $params)
+                Yii::getAlias($this->migrationPath) . '/' . $migrationName . '.php', $this->render('mass.php', $params)
             );
         }
 
@@ -345,13 +346,18 @@ class StructureGenerator extends \yii\gii\Generator
         return $cols;
     }
 
-    protected function createResolver($tableSchema){
+    protected function createResolver($tableSchema)
+    {
         $params = [
-            $tableSchema,
-            $this->getDbConnection()->schema
+            $this->getDbConnection()->schema,
+            $tableSchema
         ];
-        if($this->resolverClass){
-            return Yii::createObject(['class'=>$this->resolverClass]);
+        if ($this->resolverClass) {
+            return Yii::createObject(['class' => $this->resolverClass], $params);
+        } elseif ($this->format == 'fluent') {
+            return Yii::createObject(['class' => FluentColumnResolver::class], $params);
+        } else {
+            return Yii::createObject(['class' => RawColumnResolver::class], $params);
         }
     }
 

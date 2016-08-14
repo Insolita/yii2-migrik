@@ -8,7 +8,7 @@ namespace insolita\migrik\tests\unit;
 
 use Codeception\Specify;
 use Codeception\Verify;
-use insolita\migrik\resolver\ColumnResolver;
+use insolita\migrik\resolver\RawColumnResolver;
 use yii\db\ColumnSchema;
 use yii\db\ColumnSchemaBuilder;
 use yii\db\Expression;
@@ -18,7 +18,7 @@ use yii\db\TableSchema;
 /**
  * @var Verify
  **/
-class ColumnResolverTest extends DbTestCase
+class RawColumnResolverTest extends DbTestCase
 {
     use Specify;
 
@@ -53,7 +53,7 @@ class ColumnResolverTest extends DbTestCase
                     new ColumnSchema(['name' => 'col', 'dbType' => 'varchar', 'type' => Schema::TYPE_UPK])
                 );
                 $schema = \Yii::$app->getDb()->getSchema();
-                $resolver = $this->getMockBuilder(ColumnResolver::class)
+                $resolver = $this->getMockBuilder(RawColumnResolver::class)
                     ->setConstructorArgs([$schema,$tschema])
                     ->setMethods(['resolvePk'])
                     ->enableProxyingToOriginalMethods()
@@ -80,7 +80,7 @@ class ColumnResolverTest extends DbTestCase
                     new ColumnSchema(['name' => 'col', 'dbType' => 'varchar', 'type' => Schema::TYPE_BOOLEAN]),
                     new ColumnSchema(['name' => 'col', 'dbType' => 'varchar', 'type' => Schema::TYPE_MONEY])
                 );
-                $resolver = $this->getMockBuilder(ColumnResolver::class)->setConstructorArgs(
+                $resolver = $this->getMockBuilder(RawColumnResolver::class)->setConstructorArgs(
                         [$schema, $tschema]
                     )->setMethods(['resolveNumeric'])->enableProxyingToOriginalMethods()->getMock();
                 $resolver->expects($this->exactly(6))->method('resolveNumeric');
@@ -102,7 +102,7 @@ class ColumnResolverTest extends DbTestCase
                     new ColumnSchema(['name' => 'col', 'dbType' => 'varchar', 'type' => Schema::TYPE_DATETIME]),
                     new ColumnSchema(['name' => 'col', 'dbType' => 'varchar', 'type' => Schema::TYPE_TIMESTAMP])
                 );
-                $resolver = $this->getMockBuilder(ColumnResolver::class)->setConstructorArgs(
+                $resolver = $this->getMockBuilder(RawColumnResolver::class)->setConstructorArgs(
                     [$schema, $tschema]
                     )->setMethods(['resolveTime'])->enableProxyingToOriginalMethods()->getMock();
                 $resolver->expects($this->exactly(5))->method('resolveTime');
@@ -120,7 +120,7 @@ class ColumnResolverTest extends DbTestCase
                 $tschema->expects($this->exactly(1))->method('getColumn')->willReturnOnConsecutiveCalls(
                     new ColumnSchema(['name' => 'col', 'dbType' => 'varchar', 'type' => Schema::TYPE_BINARY])
                 );
-                $resolver = $this->getMockBuilder(ColumnResolver::class)->setConstructorArgs(
+                $resolver = $this->getMockBuilder(RawColumnResolver::class)->setConstructorArgs(
                     [$schema, $tschema]
                     )->setMethods(['resolveOther'])->enableProxyingToOriginalMethods()->getMock();
                 $resolver->expects($this->exactly(1))->method('resolveOther');
@@ -138,7 +138,7 @@ class ColumnResolverTest extends DbTestCase
                     new ColumnSchema(['name' => 'col', 'dbType' => 'varchar', 'type' => Schema::TYPE_STRING]),
                     new ColumnSchema(['name' => 'col', 'dbType' => 'varchar', 'type' => Schema::TYPE_CHAR])
                 );
-                $resolver = $this->getMockBuilder(ColumnResolver::class)->setConstructorArgs(
+                $resolver = $this->getMockBuilder(RawColumnResolver::class)->setConstructorArgs(
                     [$schema, $tschema]
                     )->setMethods(['resolveString'])->enableProxyingToOriginalMethods()->getMock();
                 $resolver->expects($this->exactly(3))->method('resolveString');
@@ -157,7 +157,7 @@ class ColumnResolverTest extends DbTestCase
                     new ColumnSchema(['name' => 'col', 'dbType' => 'enum', 'type' => Schema::TYPE_TEXT])
                 );
                 $cbuilder = $this->getMockBuilder(ColumnSchemaBuilder::class)->disableOriginalConstructor()->getMock();
-                $resolver = $this->getMockBuilder(ColumnResolver::class)->setConstructorArgs(
+                $resolver = $this->getMockBuilder(RawColumnResolver::class)->setConstructorArgs(
                     [$schema, $tschema]
                     )->setMethods(['resolveEnumType'])->enableProxyingToOriginalMethods()->getMock();
                 $resolver->expects($this->exactly(1))->method('resolveEnumType');
@@ -209,7 +209,7 @@ class ColumnResolverTest extends DbTestCase
             $schema = \Yii::$app->getDb()->getSchema();
             $tschema = $this->getMockBuilder(TableSchema::class)->getMock();
             $tschema->expects($this->once())->method('getColumn')->willReturn($testItem['col']);
-            $resolver = new ColumnResolver($schema, $tschema);
+            $resolver = new RawColumnResolver($schema, $tschema);
             $string = $resolver->resolveColumn('col');
             verify($string)->equals($testItem['expect']);
         }
@@ -238,7 +238,7 @@ class ColumnResolverTest extends DbTestCase
             $schema = \Yii::$app->getDb()->getSchema();
             $tschema = $this->getMockBuilder(TableSchema::class)->getMock();
             $tschema->expects($this->once())->method('getColumn')->willReturn($testItem['col']);
-            $resolver = new ColumnResolver($schema, $tschema);
+            $resolver = new RawColumnResolver($schema, $tschema);
             $string = $resolver->resolveColumn('col');
             verify($string)->equals($testItem['expect']);
         }
@@ -313,7 +313,7 @@ class ColumnResolverTest extends DbTestCase
             $schema = \Yii::$app->getDb()->getSchema();
             $tschema = $this->getMockBuilder(TableSchema::class)->getMock();
             $tschema->expects($this->once())->method('getColumn')->willReturn($testItem['col']);
-            $resolver = new ColumnResolver($schema, $tschema);
+            $resolver = new RawColumnResolver($schema, $tschema);
             $string = $resolver->resolveColumn('col');
             verify($string)->equals($testItem['expect']);
         }
@@ -354,7 +354,7 @@ class ColumnResolverTest extends DbTestCase
             $schema = \Yii::$app->getDb()->getSchema();
             $tschema = $this->getMockBuilder(TableSchema::class)->getMock();
             $tschema->expects($this->once())->method('getColumn')->willReturn($testItem['col']);
-            $resolver = new ColumnResolver($schema, $tschema);
+            $resolver = new RawColumnResolver($schema, $tschema);
             $string = $resolver->resolveColumn('col');
             verify($string)->equals($testItem['expect']);
         }
@@ -385,7 +385,7 @@ class ColumnResolverTest extends DbTestCase
             $schema = \Yii::$app->getDb()->getSchema();
             $tschema = $this->getMockBuilder(TableSchema::class)->getMock();
             $tschema->expects($this->once())->method('getColumn')->willReturn($testItem['col']);
-            $resolver = new ColumnResolver($schema, $tschema);
+            $resolver = new RawColumnResolver($schema, $tschema);
             $string = $resolver->resolveColumn('col');
             verify($string)->equals($testItem['expect']);
         }

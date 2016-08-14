@@ -10,12 +10,12 @@ use yii\db\Schema;
 use yii\helpers\StringHelper;
 
 /**
- * Class ColumnResolver
+ * Class RawColumnResolver
  * Resolve columns for migrations as strings with sql definition
  *
  * @package insolita\migrik\resolver
  */
-class ColumnResolver extends BaseColumnResolver
+class RawColumnResolver extends BaseColumnResolver
 {
 
     /**
