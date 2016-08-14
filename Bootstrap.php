@@ -2,6 +2,8 @@
 
 namespace insolita\migrik;
 
+use insolita\migrik\contracts\IMigrationTableResolver;
+use insolita\migrik\resolver\TableResolver;
 use yii\base\Application;
 use yii\base\BootstrapInterface;
 
@@ -19,6 +21,7 @@ class Bootstrap implements BootstrapInterface
                 $app->getModule('gii')->generators['migrik'] = 'insolita\migrik\gii\StructureGenerator';
                 $app->getModule('gii')->generators['migrikdata'] = 'insolita\migrik\gii\DataGenerator';
             }
+            \Yii::$container->set(IMigrationTableResolver::class, TableResolver::class);
         }
     }
 }
