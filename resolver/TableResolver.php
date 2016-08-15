@@ -62,7 +62,7 @@ class TableResolver implements IMigrationTableResolver
                     $founds[] = $table;
                 }
             }
-        } elseif (($table = $this->getTableSchema($tablePattern)) !== null) {
+        } elseif ($this->getTableSchema($tablePattern) !== null) {
             $founds[] = $tablePattern;
         }
         return $founds;
@@ -96,7 +96,7 @@ class TableResolver implements IMigrationTableResolver
      **/
     public function getRelations($tableName)
     {
-        $tableSchema = $this->schema->getTableSchema($tableName);
+        $tableSchema = $this->getTableSchema($tableName);
         $relations = [];
         if (!empty($tableSchema->foreignKeys)) {
             foreach ($tableSchema->foreignKeys as $i => $constraint) {
@@ -120,7 +120,7 @@ class TableResolver implements IMigrationTableResolver
      **/
     public function getIndexes($tableName)
     {
-        $tableSchema = $this->schema->getTableSchema($tableName);
+        $tableSchema = $this->getTableSchema($tableName);
         $indexes = [];
         if ($this->connection->driverName == 'mysql') {
             $query = $this->connection->createCommand('SHOW INDEX FROM [[' . $tableName . ']]')->queryAll();
