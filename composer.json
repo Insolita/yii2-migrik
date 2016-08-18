@@ -1,0 +1,31 @@
+{
+  "name": "insolita/yii2-migration-generator",
+  "description": "gii tool for mass migration generation by Schema ",
+  "type": "yii2-extension",
+  "keywords": [
+    "yii2",
+    "extension"
+  ],
+  "license": "MIT",
+  "minimum-stability": "dev",
+  "authors": [
+    {
+      "name": "insolita",
+      "email": "donnainsolita@gmail.com"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "insolita\\migrik\\": ""
+    }
+  },
+  "require": {
+    "yiisoft/yii2": "*"
+  },
+  "require-dev": {
+    "yiisoft/yii2-gii": "*"
+  },
+  "extra": {
+    "bootstrap": "insolita\\migrik\\Bootstrap"
+  }
+}
