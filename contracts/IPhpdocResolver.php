@@ -21,12 +21,6 @@ interface IPhpdocResolver
     public function getAttributes();
 
     /**
-     * @param string
-     * @return array
-     **/
-    public function getAttributeInfo($attribute);
-
-    /**
      * @return string|false
      **/
     public function getTableName();

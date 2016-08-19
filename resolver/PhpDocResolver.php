@@ -6,6 +6,7 @@
 namespace insolita\migrik\resolver;
 
 use insolita\migrik\contracts\IPhpdocResolver;
+use yii\debug\models\search\Debug;
 
 /**
  * @var \ReflectionClass $classReflection
@@ -52,17 +53,24 @@ class PhpDocResolver implements IPhpdocResolver
      **/
     public function getAttributes()
     {
-        $pattern1 = '/(?:@property|@var)\s{1,}(?:\w+)\s{1,}\$(\w+)\s{1,}@column\s{1,}(.*?)$/sium';
-        $pattern2 = '/@column\s?\(["\'\s]?(.*?)["\'\s]?\)\s{1,}(.*?)$/sium';
-        preg_match_all($pattern1, $this->_phpdoc, $matches1);
-        if (!empty($matches1) && isset($matches1[0][1])) {
-            return $matches1;
+        $pattern1 = '/(?:@property|@var)\s{1,}(?:\w+)\s{1,}\$(?P<id>\w+)\s{1,}@column\s{1,}(?P<col>.*?)$/siu';
+        $pattern2 = '/@column\s?\(["\'\s]?(?P<id>.*?)["\'\s]?\)\s{1,}(?P<col>.*?)$/siu';
+        $result = [];
+        $doclines = preg_split('/\n/su', $this->getPhpdoc());
+        foreach ($doclines as $line) {
+            if (!preg_match('/\w+/', $line)) {
+                continue;
+            }
+            preg_match($pattern1, $line, $matches1);
+            if (!empty($matches1) && !empty($matches1['id'])) {
+                $result[$matches1['id']] = $matches1['col'];
+            }
+            preg_match($pattern2, $line, $matches2);
+            if (!empty($matches2) && !empty($matches2['id'])) {
+                $result[$matches2['id']] = $matches2['col'];
+            }
         }
-        preg_match_all($pattern2, $this->_phpdoc, $matches2);
-        if (!empty($matches2) && isset($matches2[0][1])) {
-            return $matches2;
-        }
-        return false;
+        return $result;
     }
 
     /**
@@ -70,27 +78,12 @@ class PhpDocResolver implements IPhpdocResolver
      **/
     public function getTableName()
     {
-        $pattern1 = '/@table\s?(_|\-|\w+)\s?$/siu'; // - without braces
-        $pattern2 = '/@table\s?\(["\'\s]?(.*?)["\'\s]?\).*$/siu'; //with braces and possible quotes
-        preg_match($pattern1, $this->_phpdoc, $matches1);
-        if (!empty($matches1) && isset($matches1[0][1])) {
-            return $matches1[0][1];
-        }
-        preg_match($pattern2, $this->_phpdoc, $matches2);
-        if (!empty($matches2) && isset($matches2[0][1])) {
-            return $matches2[0][1];
+        $pattern = '/@table\s?\(["\'\s]?(.*?)["\'\s]?\).*$/siu'; //with braces and possible quotes
+        preg_match($pattern, $this->getPhpdoc(), $matches);
+        if (!empty($matches) && isset($matches[1])) {
+            return $matches[1];
         }
         return false;
-    }
-
-    /**
-     * @param string
-     *
-     * @return array
-     **/
-    public function getAttributeInfo($attribute)
-    {
-        // TODO: Implement getAttributeInfo() method.
     }
 
     /**
@@ -98,15 +91,10 @@ class PhpDocResolver implements IPhpdocResolver
      **/
     public function getConnectionName()
     {
-        $pattern1 = '/@db\s?(_|\-|\w+)\s?$/siu'; // - without braces
-        $pattern2 = '/@db\s?\(["\'\s]?(.*?)["\'\s]?\).*$/siu'; //with braces and possible quotes
-        preg_match($pattern1, $this->_phpdoc, $matches1);
-        if (!empty($matches1) && isset($matches1[0][1])) {
-            return $matches1[0][1];
-        }
-        preg_match($pattern2, $this->_phpdoc, $matches2);
-        if (!empty($matches2) && isset($matches2[0][1])) {
-            return $matches2[0][1];
+        $pattern = '/@db\s?\(["\'\s]?(.*?)["\'\s]?\).*$/siu'; //with braces and possible quotes
+        preg_match($pattern, $this->getPhpdoc(), $matches);
+        if (!empty($matches) && isset($matches[1])) {
+            return $matches[1];
         }
         return false;
     }
@@ -115,6 +103,12 @@ class PhpDocResolver implements IPhpdocResolver
     {
         if (!$this->_phpdoc) {
             $this->_phpdoc = $this->classReflection->getDocComment();
+            $attrs = $this->classReflection->getProperties(\ReflectionProperty::IS_PUBLIC);
+            if (!empty($attrs)) {
+                foreach ($attrs as $attr) {
+                    $this->_phpdoc .= $attr->getDocComment();
+                }
+            }
         }
         return $this->_phpdoc;
     }

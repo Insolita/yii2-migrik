@@ -9,9 +9,8 @@ use Codeception\Util\Debug;
 use Codeception\Verify;
 use Codeception\Specify;
 use insolita\migrik\resolver\PhpDocResolver;
+use insolita\migrik\tests\data\HistoryItem;
 use insolita\migrik\tests\data\TestModel;
-use Symfony\Component\PropertyInfo\Extractor\PhpDocExtractor;
-use Symfony\Component\PropertyInfo\PropertyInfoExtractor;
 
 /**
  * @var Verify
@@ -47,31 +46,28 @@ class PhpdocResolverTest extends DbTestCase
 
     public function testGetTableName()
     {
-        self::markTestIncomplete();
         $resolver = new PhpDocResolver(TestModel::className());
         $table = $resolver->getTableName();
         verify($table)->equals('{{%somenew}}');
+
+        $resolver = new PhpDocResolver(HistoryItem::class);
+        $table = $resolver->getTableName();
+        verify($table)->equals('{{%guyii_log}}');
     }
 
-    public function testGetAttributeInfo()
+    public function testGetConnectionName()
     {
-        self::markTestIncomplete();
         $resolver = new PhpDocResolver(TestModel::className());
-        $info = $resolver->getAttributeInfo('id');
-        verify($info)->equals(['attribute' => 'id', 'type' => 'pk', 'comment' => 'Id']);
-        $info = $resolver->getAttributeInfo('username');
-        verify($info)->equals(
-            ['attribute' => 'username', 'type' => 'string(100)', 'notNull' => true, 'defaultValue' => 'Vasya']
-        );
-        $info = $resolver->getAttributeInfo('email');
-        verify($info)->equals(
-            ['attribute' => 'email', 'type' => 'string(200)', 'null' => true, 'defaultValue' => null]
-        );
+        $table = $resolver->getConnectionName();
+        verify($table)->equals('db2');
+
+        $resolver = new PhpDocResolver(HistoryItem::class);
+        $table = $resolver->getConnectionName();
+        verify($table)->equals('db');
     }
 
     public function testGetAttributes()
     {
-        self::markTestIncomplete();
         $resolver = new PhpDocResolver(TestModel::className());
         $info = $resolver->getAttributes();
         verify($info)->equals(
@@ -81,24 +77,44 @@ class PhpdocResolverTest extends DbTestCase
                 'email' => 'string(200)|null()|defaultValue(null)'
             ]
         );
-    }
 
-    public function testPhpdocReflection()
-    {
-        $class = TestModel::className();
-        $ref = new \ReflectionClass($class);
-        $info = $ref->getDocComment();
+        $resolver = new PhpDocResolver(HistoryItem::class);
+        $info = $resolver->getAttributes();
+        verify($info)->hasKey('id');
+        verify($info)->hasKey('route');
+        verify($info)->hasKey('args');
+        verify($info)->hasKey('success');
         Debug::debug($info);
-
-        $ext = new PhpDocExtractor();
-        $types = $ext->getTypes($class, 'password');
-        Debug::debug($types);
-
-        $short = $ext->getShortDescription($class, 'password');
-        Debug::debug($types);
-
-        $long = $ext->getLongDescription($class, 'password');
-        Debug::debug($types);
-
     }
+
+    public function testGetAttributes2()
+    {
+        $phpdoc
+            = <<<PHPDOC
+        /**************
+         *
+         * @column(foo) string(10)|unique|notNull
+         * @column(bar) decimal(5,2)
+         * @property boolean \$baz @column boolean|default('bla')
+         * @column(empty)
+         * @var string \$zuu @column text|default('bla')
+         * 
+        */
+PHPDOC;
+
+
+        $resolver = $this->getMockBuilder(PhpDocResolver::class)->setConstructorArgs(
+            [HistoryItem::class]
+        )->setMethods(['getPhpdoc'])->getMock();
+        $resolver->expects($this->any())->method('getPhpdoc')->willReturn($phpdoc);
+        verify($resolver->getPhpdoc())->equals($phpdoc);
+        $info = $resolver->getAttributes();
+        Debug::debug($info);
+        verify($info)->hasKey('foo');
+        verify($info)->hasKey('bar');
+        verify($info)->hasKey('baz');
+        verify($info)->hasKey('zuu');
+        verify($info)->hasntKey('empty');
+    }
+
 }

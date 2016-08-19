@@ -6,9 +6,9 @@
 namespace insolita\migrik\tests\data;
 
 /**
- * @db 'db'
- * @table '{{%guyii_log}}'
-**/
+ * @db (db)
+ * @table ({{%guyii_log}})
+ **/
 class HistoryItem
 {
     /**

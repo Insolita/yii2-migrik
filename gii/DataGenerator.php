@@ -116,7 +116,7 @@ class DataGenerator extends Generator
                     'message' => 'Only word characters and backslashes 
             are allowed.'
                 ],
-                [['modelClass'], 'validateClass','skipOnEmpty'=>false],
+                [['modelClass'], 'validateClass', 'skipOnEmpty' => false],
                 [['db'], 'validateDb'],
                 ['migrationPath', 'safe'],
                 [['usePrefix'], 'boolean'],
@@ -128,8 +128,8 @@ class DataGenerator extends Generator
     public function validateClass($attribute, $params)
     {
         if ($this->insertMode == self::MODE_MODEL) {
-            if(empty($this->$attribute)){
-                $this->addError($attribute,'Model Class Required in current insert Mode!');
+            if (empty($this->$attribute)) {
+                $this->addError($attribute, 'Model Class Required in current insert Mode!');
                 return false;
             }
             return parent::validateClass($attribute, $params);
@@ -157,6 +157,34 @@ class DataGenerator extends Generator
         $this->rawData = $this->getTableData($this->tableName, $this->tableColumns);
         return call_user_func([$this, $this->insertMode . 'ModeGenerate']);
 
+    }
+
+    /**
+     * Returns the view file for the input form of the generator.
+     * The default implementation will return the "form.php" file under the directory
+     * that contains the generator class file.
+     *
+     * @return string the view file for the input form of the generator.
+     */
+    public function formView()
+    {
+        $class = new \ReflectionClass($this);
+
+        return dirname($class->getFileName()) . '/form_data.php';
+    }
+
+    /**
+     * Returns the root path to the default code template files.
+     * The default implementation will return the "templates" subdirectory of the
+     * directory containing the generator class file.
+     *
+     * @return string the root path to the default code template files.
+     */
+    public function defaultTemplate()
+    {
+        $class = new \ReflectionClass($this);
+
+        return dirname($class->getFileName()) . '/default_data';
     }
 
     /**
@@ -204,35 +232,6 @@ class DataGenerator extends Generator
             }
             return [$data];
         }
-    }
-
-
-    /**
-     * Returns the view file for the input form of the generator.
-     * The default implementation will return the "form.php" file under the directory
-     * that contains the generator class file.
-     *
-     * @return string the view file for the input form of the generator.
-     */
-    public function formView()
-    {
-        $class = new \ReflectionClass($this);
-
-        return dirname($class->getFileName()) . '/form_data.php';
-    }
-
-    /**
-     * Returns the root path to the default code template files.
-     * The default implementation will return the "templates" subdirectory of the
-     * directory containing the generator class file.
-     *
-     * @return string the root path to the default code template files.
-     */
-    public function defaultTemplate()
-    {
-        $class = new \ReflectionClass($this);
-
-        return dirname($class->getFileName()) . '/default_data';
     }
 
     /**

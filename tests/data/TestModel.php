@@ -8,7 +8,7 @@ namespace insolita\migrik\tests\data;
 use yii\db\ActiveRecord;
 
 /**
- * @db(db)
+ * @db(db2)
  * @table({{%somenew}})
  *
  * @property integer    $id         @column pk()|comment("Id")

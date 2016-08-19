@@ -25,4 +25,9 @@ interface IModelResolver
      **/
     public function getTableName();
 
+    /**
+     * @return array
+     **/
+    public function getAttributeLabels();
+
 }
