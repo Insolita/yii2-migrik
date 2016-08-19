@@ -11,5 +11,3 @@ require_once(__DIR__ . '/../../../../vendor/yiisoft/yii2/Yii.php');
 
 \Yii::setAlias('@tests', __DIR__);
 \Yii::setAlias('@common', __DIR__. '/../../../../common');
-\Yii::setAlias('@solly/chat', __DIR__. '/../../../../modules/solly/yii2-chatty');
-\Yii::setAlias('@solly/projector', __DIR__. '/../../../../modules/solly/yii2-projector');
