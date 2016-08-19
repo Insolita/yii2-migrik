@@ -6,13 +6,14 @@ Migration Generator
 
 ###CHANGELOG
 20.08.2016 - 2.2 version release
- - added new generator by phpdoc annotations; see [annotation syntax](#annotation)
+ - added new generator by phpdoc annotations; see [annotation syntax](#annotation-syntax)
+ 
 15.08.2016 - 2.1 version release 
  - added ability to generate migrations in fluent interface (raw format also available)
  - improved templates; added database initializations
  - improved postresql index retrieving
  - structure improved; separate logic in external classes
- - added ability to set custom class for column generation (@see [Customizing section](#customize))   
+ - added ability to set custom class for column generation (@see [Customizing section](#customizing))   
  
 13.08.2016 - 2.0 version release with new ability - generate migrations based on table data
 __Possible BC__
@@ -44,7 +45,7 @@ to the require-dev section of your `composer.json` file.
 
 Just install, go to gii and use (By default composer bootstrap hook)
 
-###ANNOTATION SYNTAX (#annotation)
+###ANNOTATION SYNTAX
 
 In general the syntax of column definitions is based  on style of yii-migration, only separated by "|" and provide a little more opportunities for reducing code
  - as you see in examples - empty brackets not necessary
@@ -90,7 +91,6 @@ class TestModel extends ActiveRecord{
 ```
 
  
-(#customize)
 ###Customizing 
 ##### Use Own templates
 Copy default templates from folders 
