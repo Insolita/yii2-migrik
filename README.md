@@ -1,15 +1,19 @@
-Migration Generator From database
+Migration Generator
 =======================================
  - generate migration files (not dumps!) with indexes, and foreign keys, for one table, comma separated list of tables,  by part of table name, for all tables by 
  - generate migrations based on table data - in two ways - as batchInsert Query or as insert via model 
+ - generate migrations based on PHPDOC and model properties
 
 ###CHANGELOG
+20.08.2016 - 2.2 version release
+ - added new generator by phpdoc annotations; see [annotation syntax](#annotation-syntax)
+ 
 15.08.2016 - 2.1 version release 
  - added ability to generate migrations in fluent interface (raw format also available)
  - improved templates; added database initializations
  - improved postresql index retrieving
  - structure improved; separate logic in external classes
- - added ability to set custom class for column generation (@see Customizing section)   
+ - added ability to set custom class for column generation (@see [Customizing section](#customizing))   
  
 13.08.2016 - 2.0 version release with new ability - generate migrations based on table data
 __Possible BC__
@@ -23,17 +27,17 @@ The preferred way to install this extension is through [composer](http://getcomp
 Either run
 
 ```
-php composer.phar require -dev --prefer-dist insolita/yii2-migration-generator:~2.1
+php composer.phar require -dev --prefer-dist insolita/yii2-migration-generator:~2.2
 ```
 or 
 ```
-composer require -dev --prefer-dist insolita/yii2-migration-generator:~2.1
+composer require -dev --prefer-dist insolita/yii2-migration-generator:~2.2
 ```
 
 or add
 
 ```
-"insolita/yii2-migration-generator": "~2.1"
+"insolita/yii2-migration-generator": "~2.2"
 ```
 
 to the require-dev section of your `composer.json` file.
@@ -41,7 +45,54 @@ to the require-dev section of your `composer.json` file.
 
 Just install, go to gii and use (By default composer bootstrap hook)
 
-###Customizing
+
+###ANNOTATION SYNTAX
+
+In general the syntax of column definitions is based  on style of yii-migration, only separated by "|" and provide a little more opportunities for reducing code
+ - as you see in examples - empty brackets not necessary
+ - also shortcut expr() will be replaced to defaultExpression() and default() to defaultValue 
+ 
+You can add annotations in your model(not necessary AR or yii\\base\\Model or Object or stdClass)
+
+`@db (db2)` - specify connection id required for migration 'db' - by default"
+
+`@table ({{%my_table}})`- specify table for migration"
+
+__Supported column annotations:__
+ - As separate annotation above class  or above current variable
+ 
+ ```php 
+ /**
+ * @column (name) string|notNull|default('SomeValue')
+ */
+ ```
+ 
+ - As addition to @property or @var definition 
+ ```
+    /**
+     * @var int $id @column pk()
+    **/
+    public $id;
+    /**
+     * @var string $route @column string(100)|notNull()
+    **/
+    public $route;
+ 
+ ```
+
+```
+/**
+ * @property integer    $id         @column pk|comment("Id")
+ * @property string     $username   @column string(100)|unique|notNull|default("Vasya")
+ * @property string     $email      @column string(200)|unique()|defaultValue("123@mail.ru")
+ * @property string     $password   @column string(200)|notNull|expr(null)
+ * @property string     $created_at @column string(200)|notNull|expr('CURRENT_TIMESTAMP')
+**/
+class TestModel extends ActiveRecord{
+```
+
+ 
+###Customizing 
 ##### Use Own templates
 Copy default templates from folders 
    `vendor/insolita/yii2-migration-generator/gii/default_structure //schema migrations`

@@ -1,6 +1,6 @@
 {
   "name": "insolita/yii2-migration-generator",
-  "description": "gii tool for mass migration generation by Schema ",
+  "description": "Set of gii tools for generating  files for migration by schema of table , phpdoc or table data",
   "type": "yii2-extension",
   "keywords": [
     "yii2",
