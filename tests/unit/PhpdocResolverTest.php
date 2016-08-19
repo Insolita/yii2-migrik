@@ -50,7 +50,7 @@ class PhpdocResolverTest extends DbTestCase
         self::markTestIncomplete();
         $resolver = new PhpDocResolver(TestModel::className());
         $table = $resolver->getTableName();
-        verify($table)->equals('{%somenew}');
+        verify($table)->equals('{{%somenew}}');
     }
 
     public function testGetAttributeInfo()
@@ -76,9 +76,9 @@ class PhpdocResolverTest extends DbTestCase
         $info = $resolver->getAttributes();
         verify($info)->equals(
             [
-                'id' => 'pk|comment="Id"',
-                'username' => 'string(100)|notNull|default="Vasya"',
-                'email' => 'string(200)|null|default=null'
+                'id' => 'pk()|comment("Id")',
+                'username' => 'string(100)|notNull()|defaultValue("Vasya")',
+                'email' => 'string(200)|null()|defaultValue(null)'
             ]
         );
     }

@@ -52,7 +52,17 @@ class PhpDocResolver implements IPhpdocResolver
      **/
     public function getAttributes()
     {
-        return $this->classReflection->getDefaultProperties();
+        $pattern1 = '/(?:@property|@var)\s{1,}(?:\w+)\s{1,}\$(\w+)\s{1,}@column\s{1,}(.*?)$/sium';
+        $pattern2 = '/@column\s?\(["\'\s]?(.*?)["\'\s]?\)\s{1,}(.*?)$/sium';
+        preg_match_all($pattern1, $this->_phpdoc, $matches1);
+        if (!empty($matches1) && isset($matches1[0][1])) {
+            return $matches1;
+        }
+        preg_match_all($pattern2, $this->_phpdoc, $matches2);
+        if (!empty($matches2) && isset($matches2[0][1])) {
+            return $matches2;
+        }
+        return false;
     }
 
     /**
@@ -60,7 +70,17 @@ class PhpDocResolver implements IPhpdocResolver
      **/
     public function getTableName()
     {
-        // TODO: Implement getTableName() method.
+        $pattern1 = '/@table\s?(_|\-|\w+)\s?$/siu'; // - without braces
+        $pattern2 = '/@table\s?\(["\'\s]?(.*?)["\'\s]?\).*$/siu'; //with braces and possible quotes
+        preg_match($pattern1, $this->_phpdoc, $matches1);
+        if (!empty($matches1) && isset($matches1[0][1])) {
+            return $matches1[0][1];
+        }
+        preg_match($pattern2, $this->_phpdoc, $matches2);
+        if (!empty($matches2) && isset($matches2[0][1])) {
+            return $matches2[0][1];
+        }
+        return false;
     }
 
     /**
@@ -78,14 +98,17 @@ class PhpDocResolver implements IPhpdocResolver
      **/
     public function getConnectionName()
     {
-        // TODO: Implement getConnectionName() method.
-    }
-
-    protected function createClassReflection()
-    {
-        if ($this->class) {
-            $this->classReflection = new \ReflectionClass($this->class);
+        $pattern1 = '/@db\s?(_|\-|\w+)\s?$/siu'; // - without braces
+        $pattern2 = '/@db\s?\(["\'\s]?(.*?)["\'\s]?\).*$/siu'; //with braces and possible quotes
+        preg_match($pattern1, $this->_phpdoc, $matches1);
+        if (!empty($matches1) && isset($matches1[0][1])) {
+            return $matches1[0][1];
         }
+        preg_match($pattern2, $this->_phpdoc, $matches2);
+        if (!empty($matches2) && isset($matches2[0][1])) {
+            return $matches2[0][1];
+        }
+        return false;
     }
 
     public function getPhpdoc()
@@ -94,6 +117,13 @@ class PhpDocResolver implements IPhpdocResolver
             $this->_phpdoc = $this->classReflection->getDocComment();
         }
         return $this->_phpdoc;
+    }
+
+    protected function createClassReflection()
+    {
+        if ($this->class) {
+            $this->classReflection = new \ReflectionClass($this->class);
+        }
     }
 
 }
