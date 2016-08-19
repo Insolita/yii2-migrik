@@ -8,11 +8,11 @@ namespace insolita\migrik\tests\data;
 use yii\db\ActiveRecord;
 
 /**
- * @db(db2)
+ * @db (db2)
  * @table({{%somenew}})
  *
  * @property integer    $id         @column pk()|comment("Id")
- * @property string     $username   @column string(100)|notNull()|defaultValue("Vasya")
+ * @property string     $username   @column string(100)|notNull()|default("Vasya")
  * @property string     $email      @column string(200)|null()|defaultValue(null)
  * @property string     $password
  * @property string     $remember_token
