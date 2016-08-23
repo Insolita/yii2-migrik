@@ -276,6 +276,9 @@ class ByModelGenerator extends Generator
             if (!StringHelper::endsWith($el, ')')) {
                 $el .= '()';
             }
+            if (StringHelper::startsWith($el, 'pk(')) {
+                $el = str_replace('pk(', 'primaryKey(', $el);
+            }
             if (StringHelper::startsWith($el, 'default(')) {
                 $el = str_replace('default(', 'defaultValue(', $el);
             }
