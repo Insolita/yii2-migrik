@@ -28,7 +28,7 @@ class <?= $migrationName ?> extends Migration
     {
         /**
         Uncomment this block for detach model behaviors
-        Event::on(<?=$generator->modelBasename?>::class, <?=$generator->modelBasename?>::EVENT_INIT,
+        Event::on(<?=$generator->modelBasename?>::className(), <?=$generator->modelBasename?>::EVENT_INIT,
                  function(Event $event ){
                      $event->sender->detachBehavior('someBehaviorName');
         });

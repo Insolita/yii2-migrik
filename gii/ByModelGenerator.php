@@ -301,7 +301,7 @@ class ByModelGenerator extends Generator
         /**
          * @var IModelResolver $modelResolver
          **/
-        $modelResolver = \Yii::createObject(['class' => IModelResolver::class], [$model]);
+        $modelResolver = \Yii::createObject(['class' => 'insolita\migrik\contracts\IModelResolver'], [$model]);
         $info = [
             'table' => $modelResolver->getTableName(),
             'columns' => $modelResolver->getAttributes(),
@@ -323,7 +323,7 @@ class ByModelGenerator extends Generator
         /**
          * @var IPhpdocResolver $modelResolver
          **/
-        $modelResolver = \Yii::createObject(['class' => IPhpdocResolver::class], [$model]);
+        $modelResolver = \Yii::createObject(['class' => 'insolita\migrik\contracts\IPhpdocResolver'], [$model]);
         $info = [
             'db' => $modelResolver->getConnectionName(),
             'table' => $modelResolver->getTableName(),

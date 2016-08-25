@@ -9,8 +9,6 @@ namespace insolita\migrik\gii;
 
 use insolita\migrik\contracts\IMigrationColumnResolver;
 use insolita\migrik\contracts\IMigrationTableResolver;
-use insolita\migrik\resolver\FluentColumnResolver;
-use insolita\migrik\resolver\RawColumnResolver;
 use insolita\migrik\resolver\TableResolver;
 use Yii;
 use yii\db\TableSchema;
@@ -127,7 +125,7 @@ class StructureGenerator extends \yii\gii\Generator
                 [
                     ['resolverClass'],
                     'validateClass',
-                    'params' => ['extends' => IMigrationColumnResolver::class],
+                    'params' => ['extends' => 'insolita\migrik\contracts\IMigrationColumnResolver'],
                     'skipOnEmpty' => true
                 ],
                 [['genmode'], 'in', 'range' => [self::MOD_SINGLE, self::MOD_BULK]],
@@ -365,7 +363,7 @@ class StructureGenerator extends \yii\gii\Generator
              * @var IMigrationTableResolver
              **/
             $this->tableResolver = Yii::createObject(
-                ['class' => IMigrationTableResolver::class],
+                ['class' => 'insolita\migrik\contracts\IMigrationTableResolver'],
                 [$this->getDbConnection()]
             );
         }
@@ -403,9 +401,9 @@ class StructureGenerator extends \yii\gii\Generator
         if ($this->resolverClass) {
             return Yii::createObject(['class' => $this->resolverClass], $params);
         } elseif ($this->format == 'fluent') {
-            return Yii::createObject(['class' => FluentColumnResolver::class], $params);
+            return Yii::createObject(['class' => 'insolita\migrik\resolver\FluentColumnResolver'], $params);
         } else {
-            return Yii::createObject(['class' => RawColumnResolver::class], $params);
+            return Yii::createObject(['class' => 'insolita\migrik\resolver\RawColumnResolver'], $params);
         }
     }
 
