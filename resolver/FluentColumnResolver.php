@@ -58,7 +58,14 @@ class FluentColumnResolver extends BaseColumnResolver
     protected function resolvePk(ColumnSchema $column)
     {
         list($type, $size, , , $comment) = $this->resolveCommon($column);
-        $unsigned = $column->unsigned ? 'unsigned()' : '';
+        if (in_array($column->type, [Schema::TYPE_BIGPK, Schema::TYPE_UBIGPK])) {
+            $type = 'bigPrimaryKey';
+        }
+        if (in_array($column->type, [Schema::TYPE_PK, Schema::TYPE_UPK])) {
+            $type = 'primaryKey';
+        }
+        $unsigned = ($column->unsigned || in_array($column->type, [Schema::TYPE_UBIGPK, Schema::TYPE_UPK]))
+            ? 'unsigned()' : '';
         return $this->buildString([$type . $size, $unsigned, $comment]);
     }
 

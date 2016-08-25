@@ -12,7 +12,7 @@ use yii\db\ActiveRecord;
  * @table({{%somenew}})
  *
  * @property integer    $id         @column pk()|comment("Id")
- * @property string     $username   @column string(100)|notNull()|default("Vasya")
+ * @property string     $username   @column string(100)|notNull()|defaultValue("Vasya")
  * @property string     $email      @column string(200)|null()|defaultValue(null)
  * @property string     $password
  * @property string     $remember_token

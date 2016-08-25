@@ -99,13 +99,13 @@ class FluentColumnResolverTest extends DbTestCase
         $test = [
             [
                 'col' => new ColumnSchema(
-                    ['type' => Schema::TYPE_PK, 'allowNull' => true, 'dbType' => 'string', 'size' => 1000]
+                    ['type' => Schema::TYPE_PK, 'allowNull' => true, 'dbType' => 'string']
                 ),
-                'expect' => '$this->pk()'
+                'expect' => '$this->primaryKey()'
             ],
             [
                 'col' => new ColumnSchema(['type' => Schema::TYPE_UBIGPK, 'comment' => 'It`s really big']),
-                'expect' => '$this->'.Schema::TYPE_UBIGPK . "()->comment('It`s really big')"
+                'expect' => '$this->bigPrimaryKey()->unsigned()->comment(\'It`s really big\')'
             ]
 
         ];
