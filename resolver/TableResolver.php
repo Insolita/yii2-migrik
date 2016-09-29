@@ -130,7 +130,7 @@ class TableResolver implements IMigrationTableResolver
             if ($query) {
                 foreach ($query as $i => $index) {
                     $indexes[$index['Key_name']]['cols'][$index['Seq_in_index']] = $index['Column_name'];
-                    $indexes[$index['Key_name']]['isuniq'] = ($index['Non_unique'] == 1) ? true : false;
+                    $indexes[$index['Key_name']]['isuniq'] = ($index['Non_unique'] == 1) ? false : true;
                 }
             }
         } elseif ($this->connection->driverName == 'pgsql') {
