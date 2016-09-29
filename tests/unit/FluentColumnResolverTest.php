@@ -191,6 +191,17 @@ class FluentColumnResolverTest extends DbTestCase
                 ),
                 'expect' => '$this->integer(6)->unsigned()->notNull()->defaultValue(0)'
             ],
+            [
+                'col' => new ColumnSchema(
+                    [
+                        'type' => Schema::TYPE_SMALLINT,
+                        'size' => 3,
+                        'defaultValue' => 15,
+                        'unsigned' => true
+                    ]
+                ),
+                'expect' => '$this->smallInteger(3)->unsigned()->notNull()->defaultValue(15)'
+            ],
         ];
 
         foreach ($test as $testItem) {
