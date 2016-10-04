@@ -286,8 +286,8 @@ class RawColumnResolverTest extends DbTestCase
                 'col' => new ColumnSchema(
                     [
                         'type' => Schema::TYPE_DECIMAL,
-                        'scale' => 8,
-                        'precision' => 2,
+                        'scale' => 2,
+                        'precision' => 8,
                         'defaultValue' => 340.23,
                         'dbType' => 'decimal'
                     ]
