@@ -42,7 +42,7 @@ class FluentColumnResolver extends BaseColumnResolver
         }
         list($type, $size, $default, $nullable, $comment) = $this->resolveCommon($column);
         if ($column->scale && $column->precision) {
-            $size = '(' . $column->scale . ', ' . $column->precision . ')';
+            $size = '(' . $column->precision . ', ' . $column->scale . ')';
         } elseif ($column->precision) {
             $size = '(' . $column->precision . ')';
         }
