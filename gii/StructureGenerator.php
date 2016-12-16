@@ -37,7 +37,7 @@ class StructureGenerator extends \yii\gii\Generator
     /**
      * @var string
      */
-    public $migrationPath = '@app/migrations';
+    public $migrationPath = '@common/migrations';
     /**
      * @var
      */
@@ -82,6 +82,10 @@ class StructureGenerator extends \yii\gii\Generator
      */
     private $tableResolver = null;
 
+    /**
+     * @var string Prefix for migration file names
+     */
+    public $prefix;
 
     /**
      * @inheritdoc
@@ -98,6 +102,14 @@ class StructureGenerator extends \yii\gii\Generator
     public function getDescription()
     {
         return 'This generator generates migration file for the specified database table.';
+    }
+
+    public function init() {
+        parent::init();
+
+        if (!$this->prefix) {
+            $this->prefix = 'm' . gmdate('ymd_His');
+        }
     }
 
     /**
@@ -131,6 +143,7 @@ class StructureGenerator extends \yii\gii\Generator
                 [['genmode'], 'in', 'range' => [self::MOD_SINGLE, self::MOD_BULK]],
                 [['format'], 'in', 'range' => [self::FORMAT_FLUENT, self::FORMAT_RAW]],
                 [['tableName'], 'validateTableName'],
+                [['prefix'], 'string'],
             ]
         );
     }
@@ -265,15 +278,13 @@ class StructureGenerator extends \yii\gii\Generator
      */
     protected function generateSingleMigration()
     {
-        $i = 10;
         $files = [];
         $allRelations = [];
         foreach ($this->getTables() as $tableName) {
-            $i++;
             list($tableCaption, $tableAlias, $tableIndexes, $tableColumns, $tableRelations)
                 = $this->collectTableInfo($tableName);
             $allRelations[] = $tableRelations;
-            $migrationName = 'm' . gmdate('ymd_Hi' . $i) . '_' . $tableCaption;
+            $migrationName = $this->prefix . '_' . $tableCaption;
             $params = compact(
                 'tableName',
                 'tableCaption',
@@ -287,9 +298,8 @@ class StructureGenerator extends \yii\gii\Generator
                 $this->render('migration.php', $params)
             );
         }
-        $i++;
-        /**Костыль.. иначе gii глючит при попытке просмотра **/
-        $migrationName = 'm' . gmdate('ymd_Hi' . $i) . '_Relations';
+
+        $migrationName = $this->prefix . '_Relations';
         $params = ['tableRelations' => $allRelations, 'migrationName' => $migrationName];
         $files[] = new CodeFile(
             Yii::getAlias($this->migrationPath) . '/' . $migrationName . '.php',
@@ -303,12 +313,10 @@ class StructureGenerator extends \yii\gii\Generator
      */
     protected function generateBulkMigration()
     {
-        $i = 10;
         $files = [];
         $allRelations = [];
         $allTables = [];
         foreach ($this->getTables() as $tableName) {
-            $i++;
             list(, $tableAlias, $tableIndexes, $tableColumns, $tableRelations)
                 = $this->collectTableInfo($tableName);
             $allRelations[] = $tableRelations;
@@ -319,9 +327,13 @@ class StructureGenerator extends \yii\gii\Generator
                 'name' => $tableName
             ];
         }
-        $i++;
-        //$migrationName='m' . gmdate('ymd_His') . '_Mass';
-        $migrationName = 'm' . gmdate('ymd_Hi' . $i) . '_Mass';
+
+        $suffix = 'Mass';
+        if (($tables = $this->getTables()) && sizeof($tables)==1) {
+            $suffix = $tables[0];
+        }
+
+        $migrationName = $this->prefix . '_' . $suffix;
         $params = [
             'tableList' => $allTables,
             'tableRelations' => $allRelations,
