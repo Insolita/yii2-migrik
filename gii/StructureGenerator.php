@@ -37,7 +37,7 @@ class StructureGenerator extends \yii\gii\Generator
     /**
      * @var string
      */
-    public $migrationPath = '@common/migrations';
+    public $migrationPath = '@app/migrations';
     /**
      * @var
      */
