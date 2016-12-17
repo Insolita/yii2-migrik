@@ -34,6 +34,16 @@ class DataGenerator extends Generator
     public $tableCaption;
     public $tableAlias;
 
+    public $prefix;
+
+    public function init() {
+        parent::init();
+
+        if (!$this->prefix) {
+            $this->prefix = 'm' . gmdate('ymd_His');
+        }
+    }
+
     /**
      * @return string name of the code generator
      */
@@ -123,6 +133,7 @@ class DataGenerator extends Generator
                 ['migrationPath', 'safe'],
                 [['usePrefix'], 'boolean'],
                 [['insertMode'], 'in', 'range' => [self::MODE_MODEL, self::MODE_QUERY]],
+                [['prefix'], 'string'],
             ]
         );
     }
@@ -244,7 +255,7 @@ class DataGenerator extends Generator
      */
     protected function queryModeGenerate()
     {
-        $migrationName = 'm' . gmdate('ymd_Hi00') . '_' . $this->tableCaption . 'DataInsert';
+        $migrationName = $this->prefix . '_' . $this->tableCaption . 'DataInsert';
         return [
             new CodeFile(
 
@@ -267,7 +278,7 @@ class DataGenerator extends Generator
     protected function modelModeGenerate()
     {
         $this->modelBasename = StringHelper::basename($this->modelClass);
-        $migrationName = 'm' . gmdate('ymd_Hi00') . '_' . $this->tableCaption . 'ModelInsert';
+        $migrationName = $this->prefix . '_' . $this->tableCaption . 'ModelInsert';
         return [
             new CodeFile(
 

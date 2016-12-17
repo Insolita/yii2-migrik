@@ -48,6 +48,16 @@ class ByModelGenerator extends Generator
      */
     protected $modelClasses = [];
 
+    public $prefix;
+
+    public function init() {
+        parent::init();
+
+        if (!$this->prefix) {
+            $this->prefix = 'm' . gmdate('ymd_His');
+        }
+    }
+
     /**
      * @return string name of the code generator
      */
@@ -157,6 +167,7 @@ class ByModelGenerator extends Generator
                 ['migrationPath', 'safe'],
                 ['tableOptions', 'safe'],
                 [['phpdocOnly'], 'boolean'],
+                [['prefix'], 'string'],
             ]
         );
     }
@@ -177,7 +188,7 @@ class ByModelGenerator extends Generator
             foreach ($this->modelClasses as $model) {
                 $modelInfo = $this->phpdocOnly ? [] : $this->getInfoFromModel($model);
                 $phpdocInfo = $this->getInfoFromPhpdoc($model);
-                $migrationName = 'm' . gmdate('ymd_Hi' . $i) . '_'
+                $migrationName = $this->prefix . '_'
                     . Inflector::tableize(StringHelper::basename($model));
                 $params = [
                     'db' => $phpdocInfo['db'] ? $phpdocInfo['db'] : 'db',

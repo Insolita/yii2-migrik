@@ -5,6 +5,7 @@
  * @var yii\gii\generators\form\Generator $generator
  */
 
+echo \yii\helpers\Html::activeHiddenInput($generator, 'prefix');
 echo $form->field($generator, 'tableName');
 echo $form->field($generator, 'tableIgnore')->textInput(['value'=>'*migrat*']);
 echo $form->field($generator, 'db');
