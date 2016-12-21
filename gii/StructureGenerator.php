@@ -174,7 +174,8 @@ class StructureGenerator extends \yii\gii\Generator
                 'genmode' => 'Generation Mode',
                 'tableOptions' => 'Table Options',
                 'format' => 'Format of column definition',
-                'resolverClass' => 'Custom RawColumnResolver class'
+                'resolverClass' => 'Custom RawColumnResolver class',
+                'prefix'=>'prefix for filename with timestamp'
             ]
         );
     }

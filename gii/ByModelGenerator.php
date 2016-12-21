@@ -87,6 +87,7 @@ class ByModelGenerator extends Generator
                 'phpdocOnly' => 'Only by phpdoc annotation',
                 'models' => 'FQN model class or classes - one per line',
                 'tableOptions' => 'Table Options',
+                'prefix'=>'prefix for filename with timestamp'
             ]
         );
     }
@@ -116,6 +117,17 @@ class ByModelGenerator extends Generator
     public function requiredTemplates()
     {
         return ['migration.php'];
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function stickyAttributes()
+    {
+        return array_merge(
+            parent::stickyAttributes(),
+            ['db', 'migrationPath','prefix']
+        );
     }
 
     /**

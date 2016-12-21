@@ -5,7 +5,6 @@
  * @var yii\gii\generators\form\Generator $generator
  */
 
-echo \yii\helpers\Html::activeHiddenInput($generator, 'prefix');
 echo $form->field($generator, 'tableName');
 echo $form->field($generator, 'onlyColumns');
 echo $form->field($generator, 'exceptColumns');
@@ -18,4 +17,5 @@ echo $form->field($generator, 'insertMode')
         \insolita\migrik\gii\DataGenerator::MODE_MODEL=>'as Model instances'
                    ]);
 echo $form->field($generator, 'modelClass');
+echo $form->field($generator, 'prefix');
 

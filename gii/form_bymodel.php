@@ -20,9 +20,9 @@ echo 'As addition to @property or @var definition <br/><code>
 See more documentation on <a href="https://github.com/Insolita/yii2-migrik" target="_blank">GitHub</a>
 ';
 
-echo \yii\helpers\Html::activeHiddenInput($generator, 'prefix');
 echo $form->field($generator, 'models')->textarea();
 echo $form->field($generator, 'db');
 echo $form->field($generator, 'migrationPath');
 echo $form->field($generator, 'phpdocOnly')->checkbox();
 echo $form->field($generator, 'tableOptions');
+echo $form->field($generator, 'prefix');

@@ -75,7 +75,8 @@ class DataGenerator extends Generator
                 'migrationPath' => 'Migration Path',
                 'usePrefix' => 'Replace table prefix',
                 'insertMode' => 'Insert Mode',
-                'modelClass' => 'Model class'
+                'modelClass' => 'Model class',
+                'prefix'=>'prefix for filename with timestamp'
             ]
         );
     }
@@ -158,6 +159,17 @@ class DataGenerator extends Generator
     public function requiredTemplates()
     {
         return ['data_batch.php', 'data_model.php'];
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function stickyAttributes()
+    {
+        return array_merge(
+            parent::stickyAttributes(),
+            ['db', 'migrationPath','prefix']
+        );
     }
 
     /**
