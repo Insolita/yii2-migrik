@@ -17,4 +17,5 @@ echo $form->field($generator, 'insertMode')
         \insolita\migrik\gii\DataGenerator::MODE_MODEL=>'as Model instances'
                    ]);
 echo $form->field($generator, 'modelClass');
+echo $form->field($generator, 'prefix');
 

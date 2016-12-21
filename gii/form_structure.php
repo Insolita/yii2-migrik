@@ -14,3 +14,4 @@ echo $form->field($generator, 'tableOptions');
 echo $form->field($generator, 'resolverClass');
 echo $form->field($generator, 'format')->dropDownList(['fluent'=>'Fluent','raw'=>'Raw']);
 echo $form->field($generator, 'genmode')->dropDownList(['single'=>'One file per table','bulk'=>'All in one file']);
+echo $form->field($generator, 'prefix');

@@ -48,6 +48,16 @@ class ByModelGenerator extends Generator
      */
     protected $modelClasses = [];
 
+    public $prefix;
+
+    public function init() {
+        parent::init();
+
+        if (!$this->prefix) {
+            $this->prefix = 'm' . gmdate('ymd_His');
+        }
+    }
+
     /**
      * @return string name of the code generator
      */
@@ -77,6 +87,7 @@ class ByModelGenerator extends Generator
                 'phpdocOnly' => 'Only by phpdoc annotation',
                 'models' => 'FQN model class or classes - one per line',
                 'tableOptions' => 'Table Options',
+                'prefix'=>'prefix for filename with timestamp'
             ]
         );
     }
@@ -106,6 +117,17 @@ class ByModelGenerator extends Generator
     public function requiredTemplates()
     {
         return ['migration.php'];
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function stickyAttributes()
+    {
+        return array_merge(
+            parent::stickyAttributes(),
+            ['db', 'migrationPath','prefix']
+        );
     }
 
     /**
@@ -157,6 +179,7 @@ class ByModelGenerator extends Generator
                 ['migrationPath', 'safe'],
                 ['tableOptions', 'safe'],
                 [['phpdocOnly'], 'boolean'],
+                [['prefix'], 'string'],
             ]
         );
     }
@@ -177,7 +200,7 @@ class ByModelGenerator extends Generator
             foreach ($this->modelClasses as $model) {
                 $modelInfo = $this->phpdocOnly ? [] : $this->getInfoFromModel($model);
                 $phpdocInfo = $this->getInfoFromPhpdoc($model);
-                $migrationName = 'm' . gmdate('ymd_Hi' . $i) . '_'
+                $migrationName = $this->prefix . '_'
                     . Inflector::tableize(StringHelper::basename($model));
                 $params = [
                     'db' => $phpdocInfo['db'] ? $phpdocInfo['db'] : 'db',

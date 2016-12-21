@@ -5,6 +5,9 @@ Migration Generator
  - generate migrations based on PHPDOC and model properties
 
 ###CHANGELOG
+17.12.2016 - 2.2.6 version release
+     merge [pr](https://github.com/Insolita/yii2-migrik/pull/19) from [shirase](https://github.com/shirase) that fix issue with non-correct gii preview;
+     
 20.08.2016 - 2.2 version release
  - added new generator by phpdoc annotations; see [annotation syntax](#annotation-syntax)
  
@@ -135,5 +138,3 @@ $config['modules']['gii'] = [
   
   ```\Yii::$container->set(IMigrationTableResolver::class, YourTableResolver::class);```
     
-####Known Issues:
-  - sometimes not correct work gii preview - it`s features of gii preview and naming of migration files which has names with timestamp data. Try click preview button more times

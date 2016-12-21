@@ -25,3 +25,4 @@ echo $form->field($generator, 'db');
 echo $form->field($generator, 'migrationPath');
 echo $form->field($generator, 'phpdocOnly')->checkbox();
 echo $form->field($generator, 'tableOptions');
+echo $form->field($generator, 'prefix');
