@@ -7,6 +7,7 @@
  *  @var array                                  $tableList
  *  @var array                                  $tableRelations
  *  @var insolita\migrik\gii\StructureGenerator $generator
+ *  @var array $fkProps
  *
  */
 
@@ -47,7 +48,7 @@ class <?= $migrationName ?> extends Migration
 <?php if (!empty($tableRelations) && is_array($tableRelations)) :?>
 <?php foreach ($tableRelations as $table) :?>
 <?php foreach ($table['fKeys'] as $i => $rel) :?>
-            $this->addForeignKey('fk_<?=$table['tableName']?>_<?=$rel['pk']?>','<?=$table['tableAlias']?>','<?=$rel['pk']?>','<?=$rel['ftable']?>','<?=$rel['fk']?>');
+            $this->addForeignKey('fk_<?=$table['tableName']?>_<?=$rel['pk']?>','<?=$table['tableAlias']?>','<?=$rel['pk']?>','<?=$rel['ftable']?>','<?=$rel['fk']?>','<?=$fkProps['onDelete']?>','<?=$fkProps['onUpdate']?>');
 <?php endforeach;?>
 <?php endforeach;?>
 <?php endif?>

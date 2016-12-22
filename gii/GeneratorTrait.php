@@ -7,9 +7,26 @@ namespace insolita\migrik\gii;
 
 use Yii;
 use yii\db\Connection;
+use yii\base\UserException;
 
+/**
+ * Class GeneratorTrait
+ *
+ * @package insolita\migrik\gii
+ */
 trait GeneratorTrait
 {
+
+    /**
+     * @var string - Primary prefix for migrations filenames
+     */
+    public $prefix;
+
+    /**
+     * @var string = internal prefix iterator
+     */
+    protected $nextPrefix;
+
     /**
      * @return Connection the DB connection as specified by [[db]].
      */
@@ -67,5 +84,79 @@ trait GeneratorTrait
     public function getTableCaption($tableName)
     {
         return str_replace($this->getDbConnection()->tablePrefix, '', strtolower($tableName));
+    }
+
+    /**
+     * Generate next migration prefix
+     *
+     * @param string $tableName
+     *
+     * @return string
+     **/
+    protected function createNextPrefix($prefix)
+    {
+        try {
+            $uPrefix = (int)preg_replace('~[^0-9]~', '', $prefix);
+            $uPrefix = \DateTime::createFromFormat('ymdHis', $uPrefix)->add(new \DateInterval('PT1S'))->format(
+                    'ymd_His'
+                );
+            return 'm' . $uPrefix;
+        }catch(\Exception $e)
+        {
+            \Yii::error($e->geMessage.' '.$e->getTraceAsString(), __METHOD__);
+            throw new UserException('Incorrect prefix format; Use only yii2-migration compatible m[ymd_His]');
+        }
+    }
+
+    /**
+     *
+     */
+    protected function refreshNextPrefix()
+    {
+        $this->nextPrefix = $this->createNextPrefix($this->nextPrefix);
+    }
+
+    /**
+     *
+     */
+    protected function refreshPrefix()
+    {
+        $this->prefix = 'm' . gmdate('ymd_His');
+        $this->nextPrefix = $this->createNextPrefix($this->prefix);
+    }
+
+    /**
+     * @param \yii\gii\CodeFile[] $files
+     * @param array               $answers
+     * @param string              $results
+     *
+     * @return bool
+     */
+    public function save($files, $answers, &$results)
+    {
+        $this->refreshPrefix();
+        return parent::save($files, $answers, $results);
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function afterValidate()
+    {
+        parent::afterValidate();
+        $this->nextPrefix = $this->createNextPrefix($this->prefix);
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function init()
+    {
+        parent::init();
+
+        if (!$this->prefix) {
+            $this->prefix = 'm' . gmdate('ymd_His');
+            $this->nextPrefix = $this->createNextPrefix($this->prefix);
+        }
     }
 }

@@ -48,15 +48,6 @@ class ByModelGenerator extends Generator
      */
     protected $modelClasses = [];
 
-    public $prefix;
-
-    public function init() {
-        parent::init();
-
-        if (!$this->prefix) {
-            $this->prefix = 'm' . gmdate('ymd_His');
-        }
-    }
 
     /**
      * @return string name of the code generator
@@ -87,7 +78,7 @@ class ByModelGenerator extends Generator
                 'phpdocOnly' => 'Only by phpdoc annotation',
                 'models' => 'FQN model class or classes - one per line',
                 'tableOptions' => 'Table Options',
-                'prefix'=>'prefix for filename with timestamp'
+                'prefix'        => 'Primary prefix for migrations filenames'
             ]
         );
     }
@@ -107,6 +98,7 @@ class ByModelGenerator extends Generator
                  if true - only phpdoc info  will be used',
                 'models' => 'Fully qualified model names like app\models\MyModel, one or more; each must start from 
                 new line',
+                'prefix' => 'For correct migration names; format: \'m\' . date(\'ymd_His\'); Don`t change it, if you not sure! '
             ]
         );
     }
@@ -144,10 +136,7 @@ class ByModelGenerator extends Generator
         return dirname($class->getFileName()) . '/form_bymodel.php';
     }
 
-    public function stickyAttributes()
-    {
-        return ['migrationPath', 'tableOptions', 'db'];
-    }
+
 
     /**
      * Returns the root path to the default code template files.
@@ -182,6 +171,15 @@ class ByModelGenerator extends Generator
                 [['prefix'], 'string'],
             ]
         );
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function afterValidate()
+    {
+        parent::afterValidate();
+        $this->nextPrefix = $this->createNextPrefix($this->prefix);
     }
 
     /**
@@ -220,6 +218,19 @@ class ByModelGenerator extends Generator
             }
         }
         return $files;
+    }
+
+    /**
+     * @param \yii\gii\CodeFile[] $files
+     * @param array               $answers
+     * @param string              $results
+     *
+     * @return bool
+     */
+    public function save($files, $answers, &$results)
+    {
+        $this->refreshPrefix();
+        return parent::save($files, $answers, $results);
     }
 
     /**

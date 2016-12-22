@@ -5,6 +5,7 @@ Migration Generator
  - generate migrations based on PHPDOC and model properties
 
 ###CHANGELOG
+22.12.2016 - 2.2.7 version release add fields for setup default values onUpdate and onDelete in relations
 17.12.2016 - 2.2.6 version release
      merge [pr](https://github.com/Insolita/yii2-migrik/pull/19) from [shirase](https://github.com/shirase) that fix issue with non-correct gii preview;
      

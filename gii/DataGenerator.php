@@ -5,13 +5,17 @@
 
 namespace insolita\migrik\gii;
 
-
 use Yii;
 use yii\db\Query;
 use yii\gii\CodeFile;
 use yii\gii\Generator;
 use yii\helpers\StringHelper;
 
+/**
+ * Class DataGenerator
+ *
+ * @package insolita\migrik\gii
+ */
 class DataGenerator extends Generator
 {
     use GeneratorTrait;
@@ -20,29 +24,30 @@ class DataGenerator extends Generator
     const MODE_MODEL = 'model';
 
     public $db = 'db';
+
     public $migrationPath = '@app/migrations';
+
     public $tableName;
+
     public $onlyColumns;
+
     public $exceptColumns;
+
     public $insertMode = self::MODE_QUERY;
+
     public $usePrefix = true;
+
     public $modelClass;
+
     public $modelBasename = null;
 
     public $rawData;
+
     public $tableColumns;
+
     public $tableCaption;
+
     public $tableAlias;
-
-    public $prefix;
-
-    public function init() {
-        parent::init();
-
-        if (!$this->prefix) {
-            $this->prefix = 'm' . gmdate('ymd_His');
-        }
-    }
 
     /**
      * @return string name of the code generator
@@ -68,16 +73,15 @@ class DataGenerator extends Generator
         return array_merge(
             parent::attributeLabels(),
             [
-                'db' => 'Database Connection ID',
-                'tableName' => 'Table Name',
-                'onlyColumns' => 'Column List',
+                'db'            => 'Database Connection ID',
+                'tableName'     => 'Table Name',
+                'onlyColumns'   => 'Column List',
                 'exceptColumns' => 'Ignore Column List',
                 'migrationPath' => 'Migration Path',
-                'usePrefix' => 'Replace table prefix',
-                'insertMode' => 'Insert Mode',
-                'modelClass' => 'Model class',
-                'prefix'=>'prefix for filename with timestamp'
-            ]
+                'usePrefix'     => 'Replace table prefix',
+                'insertMode'    => 'Insert Mode',
+                'modelClass'    => 'Model class',
+                'prefix'        => 'Primary prefix for migrations filenames']
         );
     }
 
@@ -89,18 +93,17 @@ class DataGenerator extends Generator
         return array_merge(
             parent::hints(),
             [
-                'db' => 'This is the ID of the DB application component.',
-                'tableName' => 'table name',
-                'onlyColumns' => 'List of columns used in migration, separated with comma [By default all columns used]',
+                'db'            => 'This is the ID of the DB application component.',
+                'tableName'     => 'table name',
+                'onlyColumns'   => 'List of columns used in migration, separated with comma [By default all columns used]',
                 'exceptColumns' => 'List of columns skipped in migration, separated with comma [By default all columns 
                 used]',
                 'migrationPath' => 'Path for save migration file',
-                'usePrefix' => 'Use Table Prefix Replacer eg.{{%tablename}} instead of prefix_tablename',
-                'modelClass' => 'Full class with namespace like app\models\MyModel'
-            ]
+                'usePrefix'     => 'Use Table Prefix Replacer eg.{{%tablename}} instead of prefix_tablename',
+                'modelClass'    => 'Full class with namespace like app\models\MyModel',
+                'prefix'        => 'For correct migration names; format: \'m\' . date(\'ymd_His\'); Don`t change it, if you not sure! ']
         );
     }
-
 
     /**
      * @inheritdoc
@@ -117,16 +120,14 @@ class DataGenerator extends Generator
                     ['tableName'],
                     'match',
                     'pattern' => '/[^\w\*_\,\-\s]/',
-                    'not' => true,
-                    'message' => 'Only word characters, underscore, comma,and optionally an asterisk are allowed.'
-                ],
+                    'not'     => true,
+                    'message' => 'Only word characters, underscore, comma,and optionally an asterisk are allowed.'],
                 [
                     ['modelClass'],
                     'match',
                     'pattern' => '/^[\w\\\\]+$/',
                     'message' => 'Only word characters and backslashes 
-            are allowed.'
-                ],
+            are allowed.'],
 
                 [['modelClass'], 'validateClass', 'skipOnEmpty' => false],
 
@@ -134,11 +135,17 @@ class DataGenerator extends Generator
                 ['migrationPath', 'safe'],
                 [['usePrefix'], 'boolean'],
                 [['insertMode'], 'in', 'range' => [self::MODE_MODEL, self::MODE_QUERY]],
-                [['prefix'], 'string'],
-            ]
+                [['prefix'], 'string'],]
         );
     }
 
+
+    /**
+     * @param string $attribute
+     * @param array  $params
+     *
+     * @return bool
+     */
     public function validateClass($attribute, $params)
     {
         if ($this->insertMode == self::MODE_MODEL) {
@@ -168,12 +175,11 @@ class DataGenerator extends Generator
     {
         return array_merge(
             parent::stickyAttributes(),
-            ['db', 'migrationPath','prefix']
+            ['db', 'migrationPath']
         );
     }
 
     /**
-     *
      * @return CodeFile[] a list of code files to be created.
      */
     public function generate()
@@ -262,7 +268,6 @@ class DataGenerator extends Generator
     }
 
     /**
-     *
      * @return CodeFile[] a list of code files to be created.
      */
     protected function queryModeGenerate()
@@ -274,17 +279,14 @@ class DataGenerator extends Generator
                 Yii::getAlias($this->migrationPath) . '/' . $migrationName . '.php', $this->render(
                 'data_batch.php',
                 [
-                    'generator' => $this,
-                    'migrationName' => $migrationName
-                ]
+                    'generator'     => $this,
+                    'migrationName' => $migrationName]
             )
 
-            )
-        ];
+            )];
     }
 
     /**
-     *
      * @return CodeFile[] a list of code files to be created.
      */
     protected function modelModeGenerate()
@@ -297,13 +299,11 @@ class DataGenerator extends Generator
                 Yii::getAlias($this->migrationPath) . '/' . $migrationName . '.php', $this->render(
                 'data_model.php',
                 [
-                    'generator' => $this,
-                    'migrationName' => $migrationName
-                ]
+                    'generator'     => $this,
+                    'migrationName' => $migrationName]
             )
 
-            )
-        ];
+            )];
     }
 
 }
