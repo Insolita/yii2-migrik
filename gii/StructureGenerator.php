@@ -34,22 +34,27 @@ class StructureGenerator extends \yii\gii\Generator
      * @var string
      */
     public $db = 'db';
+
     /**
      * @var string
      */
     public $migrationPath = '@app/migrations';
+
     /**
      * @var
      */
     public $tableName;
+
     /**
      * @var
      */
     public $tableIgnore;
+
     /**
      * @var string
      */
     public $genmode = self::MOD_SINGLE;
+
     /**
      * @var string
      **/
@@ -59,19 +64,23 @@ class StructureGenerator extends \yii\gii\Generator
      * @var string
      **/
     public $resolverClass = null;
+
     /**
      * @var bool
      */
     public $usePrefix = true;
+
     /**
      * @var string
      */
     public $tableOptions = 'ENGINE=InnoDB';
 
+
     /**
      * @var array
      */
     private $_ignoredTables = [];
+
     /**
      * @var array
      */
@@ -81,11 +90,6 @@ class StructureGenerator extends \yii\gii\Generator
      * @var null
      */
     private $tableResolver = null;
-
-    /**
-     * @var string Prefix for migration file names
-     */
-    public $prefix;
 
     /**
      * @inheritdoc
@@ -104,13 +108,6 @@ class StructureGenerator extends \yii\gii\Generator
         return 'This generator generates migration file for the specified database table.';
     }
 
-    public function init() {
-        parent::init();
-
-        if (!$this->prefix) {
-            $this->prefix = 'm' . gmdate('ymd_His');
-        }
-    }
 
     /**
      * @inheritdoc
@@ -121,15 +118,14 @@ class StructureGenerator extends \yii\gii\Generator
             parent::rules(),
             [
                 [['db', 'tableName', 'tableIgnore', 'resolverClass'], 'filter', 'filter' => 'trim'],
-                [['db', 'tableName', 'format'], 'required'],
+                [['db', 'tableName', 'format', 'prefix'], 'required'],
                 [['db'], 'match', 'pattern' => '/^\w+$/', 'message' => 'Only word characters are allowed.'],
                 [
                     ['tableName', 'tableIgnore'],
                     'match',
                     'pattern' => '/[^\w\*_\,\-\s]/',
-                    'not' => true,
-                    'message' => 'Only word characters, underscore, comma,and optionally an asterisk are allowed.'
-                ],
+                    'not'     => true,
+                    'message' => 'Only word characters, underscore, comma,and optionally an asterisk are allowed.'],
                 [['db'], 'validateDb'],
                 ['migrationPath', 'safe'],
                 ['tableOptions', 'safe'],
@@ -137,16 +133,16 @@ class StructureGenerator extends \yii\gii\Generator
                 [
                     ['resolverClass'],
                     'validateClass',
-                    'params' => ['extends' => 'insolita\migrik\contracts\IMigrationColumnResolver'],
-                    'skipOnEmpty' => true
-                ],
+                    'params'      => ['extends' => 'insolita\migrik\contracts\IMigrationColumnResolver'],
+                    'skipOnEmpty' => true],
                 [['genmode'], 'in', 'range' => [self::MOD_SINGLE, self::MOD_BULK]],
                 [['format'], 'in', 'range' => [self::FORMAT_FLUENT, self::FORMAT_RAW]],
                 [['tableName'], 'validateTableName'],
-                [['prefix'], 'string'],
-            ]
+                [['prefix'], 'string'],]
         );
     }
+
+
 
     /**
      * @inheritdoc
@@ -166,16 +162,16 @@ class StructureGenerator extends \yii\gii\Generator
         return array_merge(
             parent::attributeLabels(),
             [
-                'db' => 'Database Connection ID',
-                'tableName' => 'Table Name',
-                'tableIgnore' => 'Ignored tables',
+                'db'            => 'Database Connection ID',
+                'tableName'     => 'Table Name',
+                'tableIgnore'   => 'Ignored tables',
                 'migrationPath' => 'Migration Path',
-                'usePrefix' => 'Replace table prefix',
-                'genmode' => 'Generation Mode',
-                'tableOptions' => 'Table Options',
-                'format' => 'Format of column definition',
+                'usePrefix'     => 'Replace table prefix',
+                'genmode'       => 'Generation Mode',
+                'tableOptions'  => 'Table Options',
+                'format'        => 'Format of column definition',
                 'resolverClass' => 'Custom RawColumnResolver class',
-                'prefix'=>'prefix for filename with timestamp'
+                'prefix'        => 'Primary prefix for migrations filenames'
             ]
         );
     }
@@ -188,21 +184,21 @@ class StructureGenerator extends \yii\gii\Generator
         return array_merge(
             parent::hints(),
             [
-                'db' => 'This is the ID of the DB application component.',
-                'tableName' => 'Use "*" for all table, mask support - as "tablepart*", or you can separate table names by comma ',
-                'tableIgnore' => 'You can separate some table names by comma, for ignor ',
+                'db'            => 'This is the ID of the DB application component.',
+                'tableName'     => 'Use "*" for all table, mask support - as "tablepart*", or you can separate table names by comma ',
+                'tableIgnore'   => 'You can separate some table names by comma, for ignor ',
                 'migrationPath' => 'Path for save migration file',
-                'usePrefix' => 'Use Table Prefix Replacer eg.{{%tablename}} instead of prefix_tablename',
-                'genmode' => 'All tables in separated files, or all in one file',
-                'tableOptions' => 'Table Options',
-                'format' => 'fluent - like $this->text()->notNull()->defaultValue("foo") or raw "TEXT NOT NULL DEFAULT 
+                'usePrefix'     => 'Use Table Prefix Replacer eg.{{%tablename}} instead of prefix_tablename',
+                'genmode'       => 'All tables in separated files, or all in one file',
+                'tableOptions'  => 'Table Options',
+                'format'        => 'fluent - like $this->text()->notNull()->defaultValue("foo") or raw "TEXT NOT NULL DEFAULT 
                 \"foo\"" if custom resolver class configured, this option will be ignored',
                 'resolverClass' => 'Full-qualified class name for custom implementation of 
-                \insolita\migrik\contracts\IMigrationColumnResolver'
+                \insolita\migrik\contracts\IMigrationColumnResolver',
+                'prefix' => 'For correct migration names; format: \'m\' . date(\'ymd_His\'); Don`t change it, if you not sure! '
             ]
         );
     }
-
 
     /**
      * @inheritdoc
@@ -234,6 +230,7 @@ class StructureGenerator extends \yii\gii\Generator
             return $this->generateBulkMigration();
         }
     }
+
 
     /**
      * @inheritdoc
@@ -282,10 +279,14 @@ class StructureGenerator extends \yii\gii\Generator
         $files = [];
         $allRelations = [];
         foreach ($this->getTables() as $tableName) {
-            list($tableCaption, $tableAlias, $tableIndexes, $tableColumns, $tableRelations)
+            list(
+                $tableCaption, $tableAlias, $tableIndexes, $tableColumns, $tableRelations
+                )
                 = $this->collectTableInfo($tableName);
-            $allRelations[] = $tableRelations;
-            $migrationName = $this->prefix . '_' . $tableCaption;
+            if (!empty($tableRelations)) {
+                $allRelations[] = $tableRelations;
+            }
+            $migrationName = $this->nextPrefix . '_' . $tableCaption;
             $params = compact(
                 'tableName',
                 'tableCaption',
@@ -298,14 +299,16 @@ class StructureGenerator extends \yii\gii\Generator
                 Yii::getAlias($this->migrationPath) . '/' . $migrationName . '.php',
                 $this->render('migration.php', $params)
             );
+            $this->refreshNextPrefix();
         }
-
-        $migrationName = $this->prefix . '_Relations';
-        $params = ['tableRelations' => $allRelations, 'migrationName' => $migrationName];
-        $files[] = new CodeFile(
-            Yii::getAlias($this->migrationPath) . '/' . $migrationName . '.php',
-            $this->render('relation.php', $params)
-        );
+        if (!empty($allRelations)) {
+            $migrationName = $this->nextPrefix . '_Relations';
+            $params = ['tableRelations' => $allRelations, 'migrationName' => $migrationName];
+            $files[] = new CodeFile(
+                Yii::getAlias($this->migrationPath) . '/' . $migrationName . '.php',
+                $this->render('relation.php', $params)
+            );
+        }
         return $files;
     }
 
@@ -318,31 +321,30 @@ class StructureGenerator extends \yii\gii\Generator
         $allRelations = [];
         $allTables = [];
         foreach ($this->getTables() as $tableName) {
-            list(, $tableAlias, $tableIndexes, $tableColumns, $tableRelations)
+            list(
+                , $tableAlias, $tableIndexes, $tableColumns, $tableRelations
+                )
                 = $this->collectTableInfo($tableName);
             $allRelations[] = $tableRelations;
             $allTables[] = [
-                'alias' => $tableAlias,
+                'alias'   => $tableAlias,
                 'indexes' => $tableIndexes,
                 'columns' => $tableColumns,
-                'name' => $tableName
-            ];
+                'name'    => $tableName];
         }
 
         $suffix = 'Mass';
-        if (($tables = $this->getTables()) && sizeof($tables)==1) {
+        if (($tables = $this->getTables()) && sizeof($tables) == 1) {
             $suffix = $tables[0];
         }
 
         $migrationName = $this->prefix . '_' . $suffix;
         $params = [
-            'tableList' => $allTables,
+            'tableList'      => $allTables,
             'tableRelations' => $allRelations,
-            'migrationName' => $migrationName
-        ];
+            'migrationName'  => $migrationName];
         $files[] = new CodeFile(
-            Yii::getAlias($this->migrationPath) . '/' . $migrationName . '.php',
-            $this->render('mass.php', $params)
+            Yii::getAlias($this->migrationPath) . '/' . $migrationName . '.php', $this->render('mass.php', $params)
         );
         return $files;
     }
@@ -358,11 +360,11 @@ class StructureGenerator extends \yii\gii\Generator
         $tableAlias = $this->getTableAlias($tableCaption);
         $tableIndexes = $this->getTableResolver()->getIndexes($tableName);
         $tableColumns = $this->buildColumnDefinitions($tableName);
-        $tableRelations = [
-            'fKeys' => $this->getTableResolver()->getRelations($tableName),
+        $relations = $this->getTableResolver()->getRelations($tableName);
+        $tableRelations = !empty($relations)? [
+            'fKeys'      => $relations,
             'tableAlias' => $tableAlias,
-            'tableName' => $tableName
-        ];
+            'tableName'  => $tableName]:[];
         return [$tableCaption, $tableAlias, $tableIndexes, $tableColumns, $tableRelations];
     }
 
@@ -409,8 +411,7 @@ class StructureGenerator extends \yii\gii\Generator
     {
         $params = [
             $this->getDbConnection()->schema,
-            $tableSchema
-        ];
+            $tableSchema];
         if ($this->resolverClass) {
             return Yii::createObject(['class' => $this->resolverClass], $params);
         } elseif ($this->format == 'fluent') {
