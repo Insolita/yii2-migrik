@@ -5,11 +5,12 @@
 
 namespace insolita\migrik\tests\unit;
 
+use Codeception\Specify;
 use Codeception\Util\Debug;
 use Codeception\Verify;
-use Codeception\Specify;
 use insolita\migrik\resolver\PhpDocResolver;
 use insolita\migrik\tests\data\HistoryItem;
+use insolita\migrik\tests\data\RelatedModel;
 use insolita\migrik\tests\data\TestModel;
 
 /**
@@ -72,10 +73,9 @@ class PhpdocResolverTest extends DbTestCase
         $info = $resolver->getAttributes();
         verify($info)->equals(
             [
-                'id' => 'pk()|comment("Id")',
+                'id'       => 'pk()|comment("Id")',
                 'username' => 'string(100)|notNull()|defaultValue("Vasya")',
-                'email' => 'string(200)|null()|defaultValue(null)'
-            ]
+                'email'    => 'string(200)|null()|defaultValue(null)']
         );
 
         $resolver = new PhpDocResolver(HistoryItem::class);
@@ -102,7 +102,6 @@ class PhpdocResolverTest extends DbTestCase
         */
 PHPDOC;
 
-
         $resolver = $this->getMockBuilder(PhpDocResolver::class)->setConstructorArgs(
             [HistoryItem::class]
         )->setMethods(['getPhpdoc'])->getMock();
@@ -115,6 +114,52 @@ PHPDOC;
         verify($info)->hasKey('baz');
         verify($info)->hasKey('zuu');
         verify($info)->hasntKey('empty');
+    }
+
+    public function testGetRelationInfo()
+    {
+        $resolver = new PhpDocResolver(RelatedModel::className());
+        $info = $resolver->getRelationInfo();
+        Debug::debug($info);
+        verify($info)->equals(
+            [
+                'user_id' => '{{%users}}|id|RESTRICT|NO ACTION',
+                'room_id' => '{{%chatroom}}|id|SET NULL|CASCADE',]
+        );
+    }
+
+    public function testGetRelationInfo2()
+    {
+        $phpdoc
+            = <<<PHPDOC
+        /**************
+         *
+         * @fk(item_id) {{%items}}|id|CASCADE
+         * @fk(some_id) {{%somes}}|fkId
+         * @property integer \$bar @fk {{%related}}|fk1,fk2
+         * @property integer \$baz @column integer|null  @fk {{%related}}|fk1,fk2
+         * @column(empty)
+         * @var string \$zuu @column text|default('bla')
+         * @property bad @fk  
+         * @property bad2 @fk  boo
+        */
+PHPDOC;
+
+        $resolver = $this->getMockBuilder(PhpDocResolver::class)->setConstructorArgs(
+            [HistoryItem::class]
+        )->setMethods(['getPhpdoc'])->getMock();
+        $resolver->expects($this->any())->method('getPhpdoc')->willReturn($phpdoc);
+        verify($resolver->getPhpdoc())->equals($phpdoc);
+        $info = $resolver->getRelationInfo();
+        Debug::debug($info);
+        verify($info)->hasKey('item_id');
+        verify($info)->hasKey('some_id');
+        verify($info)->hasKey('bar');
+        verify($info)->hasKey('baz');
+        verify($info)->hasntKey('zuu');
+        verify($info)->hasntKey('empty');
+        verify($info)->hasntKey('bad');
+        verify($info)->hasntKey('boo');
     }
 
 }

@@ -7,11 +7,11 @@ namespace insolita\migrik\gii;
 
 use insolita\migrik\contracts\IModelResolver;
 use insolita\migrik\contracts\IPhpdocResolver;
+use Yii;
 use yii\gii\CodeFile;
 use yii\gii\Generator;
 use yii\helpers\Inflector;
 use yii\helpers\StringHelper;
-use Yii;
 
 /**
  * Class ByModelGenerator
@@ -21,18 +21,22 @@ use Yii;
 class ByModelGenerator extends Generator
 {
     use GeneratorTrait;
+
     /**
      * @var string
      */
     public $db = 'db';
+
     /**
      * @var string
      */
     public $migrationPath = '@app/migrations';
+
     /**
      * @var
      */
     public $models;
+
     /**
      * @var bool
      */
@@ -47,7 +51,6 @@ class ByModelGenerator extends Generator
      * @var array
      */
     protected $modelClasses = [];
-
 
     /**
      * @return string name of the code generator
@@ -73,13 +76,12 @@ class ByModelGenerator extends Generator
         return array_merge(
             parent::attributeLabels(),
             [
-                'db' => ' Actual Database Connection ID for models',
+                'db'            => ' Actual Database Connection ID for models',
                 'migrationPath' => 'Migration Path',
-                'phpdocOnly' => 'Only by phpdoc annotation',
-                'models' => 'FQN model class or classes - one per line',
-                'tableOptions' => 'Table Options',
-                'prefix'        => 'Primary prefix for migrations filenames'
-            ]
+                'phpdocOnly'    => 'Only by phpdoc annotation',
+                'models'        => 'FQN model class or classes - one per line',
+                'tableOptions'  => 'Table Options',
+                'prefix'        => 'Primary prefix for migrations filenames']
         );
     }
 
@@ -91,15 +93,14 @@ class ByModelGenerator extends Generator
         return array_merge(
             parent::hints(),
             [
-                'db' => 'Actual database connection for models[needed you can set via phpdoc @db]',
+                'db'            => 'Actual database connection for models[needed you can set via phpdoc @db]',
                 'migrationPath' => 'Path for save migration file',
-                'phpdocOnly' => 'If false, Information will be collected from the properties of the model - attributes, labels, 
+                'phpdocOnly'    => 'If false, Information will be collected from the properties of the model - attributes, labels, 
                 tableName and merged with phpdoc [Annotations have a higher priority!];
                  if true - only phpdoc info  will be used',
-                'models' => 'Fully qualified model names like app\models\MyModel, one or more; each must start from 
+                'models'        => 'Fully qualified model names like app\models\MyModel, one or more; each must start from 
                 new line',
-                'prefix' => 'For correct migration names; format: \'m\' . date(\'ymd_His\'); Don`t change it, if you not sure! '
-            ]
+                'prefix'        => 'For correct migration names; format: \'m\' . date(\'ymd_His\'); Don`t change it, if you not sure! ']
         );
     }
 
@@ -118,7 +119,7 @@ class ByModelGenerator extends Generator
     {
         return array_merge(
             parent::stickyAttributes(),
-            ['db', 'migrationPath','prefix']
+            ['db', 'migrationPath', 'prefix']
         );
     }
 
@@ -135,8 +136,6 @@ class ByModelGenerator extends Generator
 
         return dirname($class->getFileName()) . '/form_bymodel.php';
     }
-
-
 
     /**
      * Returns the root path to the default code template files.
@@ -168,8 +167,7 @@ class ByModelGenerator extends Generator
                 ['migrationPath', 'safe'],
                 ['tableOptions', 'safe'],
                 [['phpdocOnly'], 'boolean'],
-                [['prefix'], 'string'],
-            ]
+                [['prefix'], 'string'],]
         );
     }
 
@@ -198,18 +196,18 @@ class ByModelGenerator extends Generator
             foreach ($this->modelClasses as $model) {
                 $modelInfo = $this->phpdocOnly ? [] : $this->getInfoFromModel($model);
                 $phpdocInfo = $this->getInfoFromPhpdoc($model);
-                $migrationName = $this->prefix . '_'
-                    . Inflector::tableize(StringHelper::basename($model));
+                $migrationName = $this->prefix . '_' . Inflector::tableize(StringHelper::basename($model));
+                $tableName = $phpdocInfo['table']
+                    ? $phpdocInfo['table']
+                    : ($this->phpdocOnly ? '{{%' . Inflector::tableize(StringHelper::basename($model)) . '}}'
+                        : $modelInfo['table']);
                 $params = [
-                    'db' => $phpdocInfo['db'] ? $phpdocInfo['db'] : 'db',
-                    'table' => $phpdocInfo['table']
-                        ? $phpdocInfo['table'] : ($this->phpdocOnly ? '{{%'
-                            . Inflector::tableize(StringHelper::basename($model)) . '}}'
-                            : $modelInfo['table']),
-                    'columns' => $this->prepareColumns($modelInfo, $phpdocInfo),
+                    'db'            => $phpdocInfo['db'] ? $phpdocInfo['db'] : 'db',
+                    'table'         => $tableName,
+                    'columns'       => $this->prepareColumns($modelInfo, $phpdocInfo),
+                    'relations'     => $this->prepareRelations($modelInfo, $phpdocInfo, $tableName),
                     'migrationName' => $migrationName,
-                    'tableOptions' => $this->tableOptions
-                ];
+                    'tableOptions'  => $this->tableOptions];
                 $files[] = new CodeFile(
                     Yii::getAlias($this->migrationPath) . '/' . $migrationName . '.php',
                     $this->render('migration.php', $params)
@@ -265,6 +263,32 @@ class ByModelGenerator extends Generator
     /**
      * @param $modelInfo
      * @param $phpdocInfo
+     * @param $tableName
+     *
+     * @return array
+     */
+    protected function prepareRelations($modelInfo, $phpdocInfo, $tableName)
+    {
+        $prepared = [];
+        if (!$this->phpdocOnly && !empty($modelInfo['relations'])) {
+            foreach ($modelInfo['relations'] as $data) {
+                $data['ftable'] = $this->getTableAlias($this->getTableCaption($data['ftable']));
+                $definition = implode('|', [$data['ftable'], $data['fk']]);
+                $prepared[$data['pk']] = $this->prepareRelationDefinition($tableName, $data['pk'], $definition);
+            }
+        }
+
+        if (!empty($phpdocInfo['relations'])) {
+            foreach ($phpdocInfo['relations'] as $name => $definition) {
+                $prepared[$name] = $this->prepareRelationDefinition($tableName, $name, $definition);
+            }
+        }
+        return $prepared;
+    }
+
+    /**
+     * @param $modelInfo
+     * @param $phpdocInfo
      *
      * @return array
      */
@@ -294,6 +318,34 @@ class ByModelGenerator extends Generator
             }
         }
         return $prepared;
+    }
+
+    /**
+     * @param string $tableName
+     * @param string $item
+     * @param string $definition
+     *
+     * @return string
+     **/
+    protected function prepareRelationDefinition($tableName, $item, $definition)
+    {
+        $arr = explode('|', $definition);
+        if (count($arr) < 2) {
+            return '';
+        }
+        if (strpos($arr[1], ',') !== false) {
+            $fkColumns = '["' . implode('","', explode(',', $arr[1])) . '"]';
+        } else {
+            $fkColumns = $arr[1];
+        }
+        $result = ['table'     => $tableName,
+                   'column'    => $item,
+                   'fkTable'   => $arr[0],
+                   'fkColumns' => $fkColumns,
+                   'onDelete'  => isset($arr[2])?$arr[2]:'null',
+                   'onUpdate'  => isset($arr[3])?$arr[3]:'null',];
+        return '$this->addForeignKey("'.$tableName.'", "'.$item.'","'..'" )';
+
     }
 
     /**
@@ -337,10 +389,10 @@ class ByModelGenerator extends Generator
          **/
         $modelResolver = \Yii::createObject(['class' => 'insolita\migrik\contracts\IModelResolver'], [$model]);
         $info = [
-            'table' => $modelResolver->getTableName(),
-            'columns' => $modelResolver->getAttributes(),
-            'labels' => $modelResolver->getAttributeLabels()
-        ];
+            'table'     => $modelResolver->getTableName(),
+            'columns'   => $modelResolver->getAttributes(),
+            'labels'    => $modelResolver->getAttributeLabels(),
+            'relations' => $modelResolver->getRelationInfo()];
         if ($info['table'] == false) {
             $info['table'] = Inflector::tableize(StringHelper::basename($model));
         }
@@ -359,10 +411,10 @@ class ByModelGenerator extends Generator
          **/
         $modelResolver = \Yii::createObject(['class' => 'insolita\migrik\contracts\IPhpdocResolver'], [$model]);
         $info = [
-            'db' => $modelResolver->getConnectionName(),
-            'table' => $modelResolver->getTableName(),
-            'columns' => $modelResolver->getAttributes(),
-        ];
+            'db'        => $modelResolver->getConnectionName(),
+            'table'     => $modelResolver->getTableName(),
+            'columns'   => $modelResolver->getAttributes(),
+            'relations' => $modelResolver->getRelationInfo()];
         return $info;
     }
 
@@ -384,6 +436,5 @@ class ByModelGenerator extends Generator
         }
         return true;
     }
-
 
 }

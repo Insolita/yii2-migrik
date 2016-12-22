@@ -30,4 +30,9 @@ interface IModelResolver
      **/
     public function getAttributeLabels();
 
+    /**
+     * @return array
+    **/
+    public function getRelationInfo();
+
 }

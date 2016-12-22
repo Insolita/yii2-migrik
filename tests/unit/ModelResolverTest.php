@@ -9,6 +9,7 @@ use Codeception\Util\Debug;
 use Codeception\Verify;
 use Codeception\Specify;
 use insolita\migrik\resolver\ModelResolver;
+use insolita\migrik\tests\data\RelatedModel;
 use insolita\migrik\tests\data\TestModel;
 use yii\helpers\ArrayHelper;
 
@@ -70,5 +71,13 @@ class ModelResolverTest extends DbTestCase
         verify(array_values($labels))->contains('ID');
         verify(array_values($labels))->contains('Пароль');
         verify(array_values($labels))->contains('Роль');
+    }
+
+    public function testGetRelationInfo()
+    {
+        $resolver = new ModelResolver(RelatedModel::class);
+        $relations = $resolver->getRelationInfo();
+        verify($relations)->notEmpty();
+        Debug::debug($relations);
     }
 }

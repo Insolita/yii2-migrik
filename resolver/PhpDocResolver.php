@@ -6,7 +6,6 @@
 namespace insolita\migrik\resolver;
 
 use insolita\migrik\contracts\IPhpdocResolver;
-use yii\debug\models\search\Debug;
 
 /**
  * @var \ReflectionClass $classReflection
@@ -47,7 +46,6 @@ class PhpDocResolver implements IPhpdocResolver
         $this->class = $class;
     }
 
-
     /**
      * @return array
      **/
@@ -68,6 +66,40 @@ class PhpDocResolver implements IPhpdocResolver
             preg_match($pattern2, $line, $matches2);
             if (!empty($matches2) && !empty($matches2['id'])) {
                 $result[$matches2['id']] = $matches2['col'];
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * @return array
+     **/
+    public function getRelationInfo()
+    {
+        $pattern1 = '/(?:@property|@var)\s{1,}(?:\w+)\s{1,}\$(?P<id>\w+)\s{1,}@fk\s{1,}(?P<fk>.*?)$/siu';
+        $pattern2 = '/@fk\s?\(["\'\s]?(?P<id>.*?)["\'\s]?\)\s{1,}(?P<fk>.*?)$/siu';
+        $pattern3
+            = '/(?:@property|@var)\s{1,}(?:\w+)\s{1,}\$(?P<id>\w+)\s{1,}@column\s{1,}(?P<col>.*?)\s{1,}@fk\s{1,}(?P<fk>.*?)$/siu';
+        $result = [];
+        $doclines = preg_split('/\n/su', $this->getPhpdoc());
+        foreach ($doclines as $line) {
+            if (!preg_match('/\w+/', $line)) {
+                continue;
+            }
+            preg_match($pattern1, $line, $matches1);
+            if (!empty($matches1) && !empty($matches1['id'])) {
+                $result[$matches1['id']] = $matches1['fk'];
+            }
+            preg_match($pattern2, $line, $matches2);
+            if (!empty($matches2) && !empty($matches2['id'])) {
+                $result[$matches2['id']] = $matches2['fk'];
+            }
+            preg_match($pattern3, $line, $matches3);
+            if (!empty($matches3) && !empty($matches3['id'])) {
+                $fk = $matches3['fk'];
+                if (strpos($fk, '|') !== false) {
+                    $result[$matches3['id']] = $matches3['fk'];
+                }
             }
         }
         return $result;

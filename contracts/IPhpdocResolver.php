@@ -29,4 +29,9 @@ interface IPhpdocResolver
      * @return string|false
      **/
     public function getConnectionName();
+
+    /**
+     * @return array
+     **/
+    public function getRelationInfo();
 }

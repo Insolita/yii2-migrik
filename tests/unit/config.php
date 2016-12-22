@@ -7,11 +7,11 @@ return [
     'components' => [
         'db' => [
             'class' => \yii\db\Connection::class,
-            'dsn' => 'pgsql:host=localhost;port=5432;dbname=ptrack_test',
+            'dsn' => 'pgsql:host=localhost;port=5432;dbname=ptrack',
             'username' => 'lusik',
             'password' => 'password',
             'charset' => 'utf8',
-            'tablePrefix'=>'itt_',
+            'tablePrefix'=>'it_',
         ],
         'log'=>[
             'traceLevel' => 3,

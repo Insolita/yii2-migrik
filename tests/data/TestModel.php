@@ -49,4 +49,6 @@ class TestModel extends ActiveRecord
     {
         return '{{%users}}';
     }
+
+
 }

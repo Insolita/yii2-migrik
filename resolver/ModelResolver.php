@@ -20,6 +20,7 @@ class ModelResolver implements IModelResolver
      * @var string
      */
     protected $class;
+
     /**
      * @var Object
      */
@@ -77,6 +78,30 @@ class ModelResolver implements IModelResolver
             return $labels;
         }
         return [];
+    }
+
+    /**
+     * @return array
+     */
+    public function getRelationInfo()
+    {
+        if ($this->classInstance && method_exists($this->classInstance, 'getTableSchema')) {
+            $tableSchema = call_user_func([$this->classInstance, 'getTableSchema']);
+            $relations = [];
+            if (!empty($tableSchema->foreignKeys)) {
+                foreach ($tableSchema->foreignKeys as $i => $constraint) {
+                    foreach ($constraint as $pk => $fk) {
+                        if (!$pk) {
+                            $relations[$i]['ftable'] = $fk;
+                        } else {
+                            $relations[$i]['pk'] = $pk;
+                            $relations[$i]['fk'] = $fk;
+                        }
+                    }
+                }
+            }
+            return $relations;
+        }
     }
 
     /**
