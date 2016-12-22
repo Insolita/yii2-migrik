@@ -75,6 +75,15 @@ class StructureGenerator extends \yii\gii\Generator
      */
     public $tableOptions = 'ENGINE=InnoDB';
 
+    /**
+     * @var string default value for Foreign key ON_UPDATE
+     */
+    public $fkOnUpdate = 'CASCADE';
+
+    /**
+     * @var string default value for Foreign key ON_DELETE
+     */
+    public $fkOnDelete = 'CASCADE';
 
     /**
      * @var array
@@ -108,7 +117,6 @@ class StructureGenerator extends \yii\gii\Generator
         return 'This generator generates migration file for the specified database table.';
     }
 
-
     /**
      * @inheritdoc
      */
@@ -138,11 +146,10 @@ class StructureGenerator extends \yii\gii\Generator
                 [['genmode'], 'in', 'range' => [self::MOD_SINGLE, self::MOD_BULK]],
                 [['format'], 'in', 'range' => [self::FORMAT_FLUENT, self::FORMAT_RAW]],
                 [['tableName'], 'validateTableName'],
-                [['prefix'], 'string'],]
+                [['fkOnUpdate', 'fkOnDelete'], 'default', 'value' => 'CASCADE'],
+                [['prefix', 'fkOnUpdate', 'fkOnDelete'], 'string'],]
         );
     }
-
-
 
     /**
      * @inheritdoc
@@ -171,8 +178,9 @@ class StructureGenerator extends \yii\gii\Generator
                 'tableOptions'  => 'Table Options',
                 'format'        => 'Format of column definition',
                 'resolverClass' => 'Custom RawColumnResolver class',
-                'prefix'        => 'Primary prefix for migrations filenames'
-            ]
+                'prefix'        => 'Primary prefix for migrations filenames',
+                'fkOnUpdate'    => 'Default action ON_UPDATE for addForeignKey method',
+                'fkOnDelete'    => 'Default action ON_DELETE for addForeignKey method',]
         );
     }
 
@@ -195,8 +203,7 @@ class StructureGenerator extends \yii\gii\Generator
                 \"foo\"" if custom resolver class configured, this option will be ignored',
                 'resolverClass' => 'Full-qualified class name for custom implementation of 
                 \insolita\migrik\contracts\IMigrationColumnResolver',
-                'prefix' => 'For correct migration names; format: \'m\' . date(\'ymd_His\'); Don`t change it, if you not sure! '
-            ]
+                'prefix'        => 'For correct migration names; format: \'m\' . date(\'ymd_His\'); Don`t change it, if you not sure! ']
         );
     }
 
@@ -215,7 +222,15 @@ class StructureGenerator extends \yii\gii\Generator
     {
         return array_merge(
             parent::stickyAttributes(),
-            ['db', 'migrationPath', 'usePrefix', 'tableOptions', 'tableIgnore', 'resolverClass']
+            [
+                'db',
+                'migrationPath',
+                'usePrefix',
+                'tableOptions',
+                'tableIgnore',
+                'resolverClass',
+                'fkOnUpdate',
+                'fkOnDelete']
         );
     }
 
@@ -230,7 +245,6 @@ class StructureGenerator extends \yii\gii\Generator
             return $this->generateBulkMigration();
         }
     }
-
 
     /**
      * @inheritdoc
@@ -303,7 +317,11 @@ class StructureGenerator extends \yii\gii\Generator
         }
         if (!empty($allRelations)) {
             $migrationName = $this->nextPrefix . '_Relations';
-            $params = ['tableRelations' => $allRelations, 'migrationName' => $migrationName];
+            $params = [
+                'tableRelations' => $allRelations,
+                'migrationName' => $migrationName,
+                'fkProps' =>['onUpdate'=>$this->fkOnUpdate,'onDelete'=>$this->fkOnDelete]
+            ];
             $files[] = new CodeFile(
                 Yii::getAlias($this->migrationPath) . '/' . $migrationName . '.php',
                 $this->render('relation.php', $params)
@@ -342,7 +360,9 @@ class StructureGenerator extends \yii\gii\Generator
         $params = [
             'tableList'      => $allTables,
             'tableRelations' => $allRelations,
-            'migrationName'  => $migrationName];
+            'migrationName'  => $migrationName,
+            'fkProps' =>['onUpdate'=>$this->fkOnUpdate,'onDelete'=>$this->fkOnDelete]
+        ];
         $files[] = new CodeFile(
             Yii::getAlias($this->migrationPath) . '/' . $migrationName . '.php', $this->render('mass.php', $params)
         );
@@ -361,10 +381,10 @@ class StructureGenerator extends \yii\gii\Generator
         $tableIndexes = $this->getTableResolver()->getIndexes($tableName);
         $tableColumns = $this->buildColumnDefinitions($tableName);
         $relations = $this->getTableResolver()->getRelations($tableName);
-        $tableRelations = !empty($relations)? [
+        $tableRelations = !empty($relations) ? [
             'fKeys'      => $relations,
             'tableAlias' => $tableAlias,
-            'tableName'  => $tableName]:[];
+            'tableName'  => $tableName] : [];
         return [$tableCaption, $tableAlias, $tableIndexes, $tableColumns, $tableRelations];
     }
 

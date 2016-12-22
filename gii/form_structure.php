@@ -15,3 +15,6 @@ echo $form->field($generator, 'resolverClass');
 echo $form->field($generator, 'format')->dropDownList(['fluent'=>'Fluent','raw'=>'Raw']);
 echo $form->field($generator, 'genmode')->dropDownList(['single'=>'One file per table','bulk'=>'All in one file']);
 echo $form->field($generator, 'prefix');
+$relOpts = \yii\bootstrap\Html::tag('div',$form->field($generator, 'fkOnUpdate'),['class'=>'col-md-6']);
+$relOpts.= \yii\bootstrap\Html::tag('div',$form->field($generator, 'fkOnDelete'),['class'=>'col-md-6']);
+echo \yii\bootstrap\Html::tag('div',$relOpts,['class'=>'row']);
