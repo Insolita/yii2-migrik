@@ -96,7 +96,7 @@ trait GeneratorTrait
     protected function createNextPrefix($prefix)
     {
         try {
-            $uPrefix = (int)preg_replace('~[^0-9]~', '', $prefix);
+            $uPrefix = preg_replace('~[^0-9]~', '', $prefix);
             $uPrefix = \DateTime::createFromFormat('ymdHis', $uPrefix)->add(new \DateInterval('PT1S'))->format(
                     'ymd_His'
                 );
