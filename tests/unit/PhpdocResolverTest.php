@@ -5,6 +5,7 @@
 
 namespace insolita\migrik\tests\unit;
 
+use Codeception\Test\Unit;
 use Codeception\Util\Debug;
 use Codeception\Verify;
 use Codeception\Specify;
@@ -15,7 +16,7 @@ use insolita\migrik\tests\data\TestModel;
 /**
  * @var Verify
  **/
-class PhpdocResolverTest extends DbTestCase
+class PhpdocResolverTest extends Unit
 {
     use Specify;
 

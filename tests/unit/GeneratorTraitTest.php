@@ -4,7 +4,7 @@
  */
 
 namespace insolita\migrik\tests\unit;
-
+use Codeception\Test\Unit;
 use Codeception\Specify;
 use Codeception\Verify;
 use insolita\migrik\gii\GeneratorTrait;
@@ -12,7 +12,7 @@ use insolita\migrik\gii\GeneratorTrait;
 /**
  * @var Verify
  **/
-class GeneratorTraitTest extends DbTestCase
+class GeneratorTraitTest extends Unit
 {
     use Specify;
     use GeneratorTrait;

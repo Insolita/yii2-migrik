@@ -5,6 +5,7 @@
 
 namespace insolita\migrik\tests\unit;
 
+use Codeception\Test\Unit;
 use Codeception\Util\Debug;
 use Codeception\Verify;
 use Codeception\Specify;
@@ -15,7 +16,7 @@ use yii\helpers\ArrayHelper;
 /**
  * @var Verify
 **/
-class ModelResolverTest extends DbTestCase
+class ModelResolverTest extends Unit
 {
     use Specify;
 

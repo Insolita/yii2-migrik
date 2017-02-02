@@ -7,13 +7,14 @@ namespace insolita\migrik\tests\unit;
 
 use Codeception\Specify;
 use Codeception\Verify;
+use Codeception\Test\Unit;
 use insolita\migrik\gii\ByModelGenerator;
 use insolita\migrik\tests\PrivateTestTrait;
 
 /**
  * @var Verify;
  **/
-class ByModelGeneratorTest extends DbTestCase
+class ByModelGeneratorTest extends Unit
 {
     use Specify;
     use PrivateTestTrait;

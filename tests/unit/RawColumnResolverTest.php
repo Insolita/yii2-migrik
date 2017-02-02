@@ -14,11 +14,12 @@ use yii\db\ColumnSchemaBuilder;
 use yii\db\Expression;
 use yii\db\Schema;
 use yii\db\TableSchema;
+use Codeception\Test\Unit;
 
 /**
  * @var Verify
  **/
-class RawColumnResolverTest extends DbTestCase
+class RawColumnResolverTest extends Unit
 {
     use Specify;
 

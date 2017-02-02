@@ -5,7 +5,7 @@
 
 namespace insolita\migrik\tests\unit;
 
-
+use Codeception\Test\Unit;
 use Codeception\Specify;
 use Codeception\Verify;
 use insolita\migrik\resolver\FluentColumnResolver;
@@ -18,7 +18,7 @@ use yii\db\TableSchema;
 /**
  * @var Verify
  **/
-class FluentColumnResolverTest extends DbTestCase
+class FluentColumnResolverTest extends Unit
 {
     use Specify;
 

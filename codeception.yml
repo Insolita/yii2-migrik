@@ -10,7 +10,8 @@ settings:
     memory_limit: 1024M
     log: false
     colors: true
-config:
-    # the entry script URL (without host info) for functional and acceptance tests
-    # PLEASE ADJUST IT TO THE ACTUAL ENTRY SCRIPT URL
-    test_entry_url: /index-test.php
+modules:
+   enabled:
+      - Yii2:
+            part: [orm]
+            configFile: 'tests/config.php'
