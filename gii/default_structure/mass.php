@@ -29,8 +29,6 @@ class <?= $migrationName ?> extends Migration
     public function safeUp()
     {
         $tableOptions = '<?=$generator->tableOptions?>';
-        $transaction=$this->db->beginTransaction();
-        try{
 <?php foreach ($tableList as $tableData) :?>
              $this->createTable('<?= ($generator->usePrefix)?$tableData['alias']:$tableData['name'] ?>',[
 <?php foreach ($tableData['columns'] as $name => $data) :?>
@@ -52,17 +50,11 @@ class <?= $migrationName ?> extends Migration
 <?php endforeach;?>
 <?php endforeach;?>
 <?php endif?>
-            $transaction->commit();
-        } catch (Exception $e) {
-             echo 'Catch Exception '.$e->getMessage().' and rollBack this';
-             $transaction->rollBack();
-        }
     }
 
     public function safeDown()
     {
-        $transaction=$this->db->beginTransaction();
-        try{
+
 <?php if (!empty($tableRelations) && is_array($tableRelations)) :?>
 <?php foreach ($tableRelations as $table) :?>
 <?php foreach ($table['fKeys'] as $i => $rel) :?>
@@ -73,10 +65,6 @@ class <?= $migrationName ?> extends Migration
 <?php foreach ($tableList as $tableData) :?>
             $this->dropTable('<?= ($generator->usePrefix)?$tableData['alias']:$tableData['name']?>');
 <?php endforeach;?>
-            $transaction->commit();
-        } catch (Exception $e) {
-            echo 'Catch Exception '.$e->getMessage().' and rollBack this';
-            $transaction->rollBack();
-        }
+
     }
 }
