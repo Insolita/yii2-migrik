@@ -343,7 +343,10 @@ class StructureGenerator extends \yii\gii\Generator
                 , $tableAlias, $tableIndexes, $tableColumns, $tableRelations
                 )
                 = $this->collectTableInfo($tableName);
-            $allRelations[] = $tableRelations;
+
+            if(!empty($tableRelations)){
+                $allRelations[] = $tableRelations;
+            }
             $allTables[] = [
                 'alias'   => $tableAlias,
                 'indexes' => $tableIndexes,

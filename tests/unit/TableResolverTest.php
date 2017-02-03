@@ -10,11 +10,12 @@ use Codeception\Verify;
 use insolita\migrik\resolver\TableResolver;
 use yii\db\Schema;
 use yii\db\TableSchema;
+use Codeception\Test\Unit;
 
 /**
  * @var Verify
  **/
-class TableResolverTest extends DbTestCase
+class TableResolverTest extends Unit
 {
     use Specify;
 
