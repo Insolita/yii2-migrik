@@ -83,7 +83,11 @@ trait GeneratorTrait
      **/
     public function getTableCaption($tableName)
     {
-        return str_replace($this->getDbConnection()->tablePrefix, '', strtolower($tableName));
+        $prefix = $this->getDbConnection()->tablePrefix;
+        if($prefix && mb_strpos($tableName, $prefix)===0){
+            return mb_substr($tableName, mb_strlen($prefix));
+        }
+        return $tableName;
     }
 
     /**
