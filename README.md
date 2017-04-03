@@ -1,5 +1,10 @@
 Migration Generator
 =======================================
+![Latest Stable Version](https://img.shields.io/packagist/v/insolita/yii2-migration-generator.svg)
+[![Total Downloads](https://img.shields.io/packagist/dt/insolita/yii2-migration-generator.svg)](https://packagist.org/packages/insolita/yii2-migration-generator)
+![License](https://img.shields.io/packagist/l/insolita/yii2-migration-generator.svg)
+
+
  - generate migration files (not dumps!) with indexes, and foreign keys, for one table, comma separated list of tables,  by part of table name, for all tables by 
  - generate migrations based on table data - in two ways - as batchInsert Query or as insert via model 
  - generate migrations based on PHPDOC and model properties
