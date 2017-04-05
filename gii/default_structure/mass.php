@@ -45,6 +45,7 @@ class <?= $migrationName ?> extends Migration
 <?php endforeach;?>
 <?php if (!empty($tableRelations) && is_array($tableRelations)) :?>
 <?php foreach ($tableRelations as $table) :?>
+<?php if (isset($table['fKeys']) === false) : continue; endif; ?>
 <?php foreach ($table['fKeys'] as $i => $rel) :?>
             $this->addForeignKey('fk_<?=$table['tableName']?>_<?=$rel['pk']?>','<?=$table['tableAlias']?>','<?=$rel['pk']?>','<?=$rel['ftable']?>','<?=$rel['fk']?>','<?=$fkProps['onDelete']?>','<?=$fkProps['onUpdate']?>');
 <?php endforeach;?>
@@ -57,6 +58,7 @@ class <?= $migrationName ?> extends Migration
 
 <?php if (!empty($tableRelations) && is_array($tableRelations)) :?>
 <?php foreach ($tableRelations as $table) :?>
+<?php if (isset($table['fKeys']) === false) : continue; endif; ?>
 <?php foreach ($table['fKeys'] as $i => $rel) :?>
             $this->dropForeignKey('fk_<?=$table['tableName']?>_<?=$rel['pk']?>', '<?=$table['tableAlias']?>');
 <?php endforeach;?>
