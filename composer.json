@@ -23,9 +23,11 @@
     "yiisoft/yii2": "*"
   },
   "require-dev": {
-    "yiisoft/yii2-gii": "*",
-    "nesbot/carbon": "*",
-    "vlucas/phpdotenv": "*"
+    "yiisoft/yii2-gii": "*"
+  },
+  "suggest": {
+    "nesbot/carbon": "for testing ",
+    "vlucas/phpdotenv": "for testing"
   },
   "extra": {
     "bootstrap": "insolita\\migrik\\Bootstrap"
