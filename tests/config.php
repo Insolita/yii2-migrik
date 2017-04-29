@@ -7,9 +7,9 @@ return [
     'components' => [
         'db' => [
             'class' => \yii\db\Connection::class,
-            'dsn' => 'pgsql:host=localhost;port=5432;dbname=ptrack_test',
-            'username' => 'lusik',
-            'password' => 'password',
+            'dsn' => getenv('DB_DSN'),
+            'username' => getenv('DB_USER'),
+            'password' => getenv('DB_PASSWORD'),
             'charset' => 'utf8',
             'tablePrefix'=>'itt_',
         ],
