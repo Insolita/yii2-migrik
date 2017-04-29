@@ -170,7 +170,7 @@ class RawColumnResolver extends BaseColumnResolver
     protected function resolveNumeric(ColumnSchema $column)
     {
         $pk = $this->tableSchema->primaryKey;
-        if (in_array($column->name, $pk)) {
+        if (count($pk) === 1 && in_array($column->name, $pk)) {
             if ($column->unsigned) {
                 $column->type = ($column->type == Schema::TYPE_BIGINT ? Schema::TYPE_UBIGPK : Schema::TYPE_UPK);
             } else {

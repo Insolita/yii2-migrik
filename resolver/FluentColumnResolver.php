@@ -36,7 +36,10 @@ class FluentColumnResolver extends BaseColumnResolver
     protected function resolveNumeric(ColumnSchema $column)
     {
         $pk = $this->tableSchema->primaryKey;
-        if (in_array($column->name, $pk)) {
+        /**
+         * fix #35 Skip pk definition build, if $pk is composite
+        **/
+        if (count($pk)===1 && in_array($column->name, $pk)) {
             $column->type = ($column->type == Schema::TYPE_BIGINT ? 'bigPrimaryKey' : 'primaryKey');
             return $this->resolvePk($column);
         }
