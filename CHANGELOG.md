@@ -1,6 +1,6 @@
 CHANGELOG
 =================================
-
+29.04.2017 - 2.3 version release; Fix common bugs; seprate postgresql resolver for suppor arrays (one dimensional only) and json columns; fix view files;
 03.02.2017 - 2.2.9 version release
  - Fix bug #28; upgrade tests for using YII2 codeception module fix #26
 
