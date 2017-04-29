@@ -42,14 +42,21 @@ class <?= $migrationName ?> extends Migration
 <?php if (!empty($tableIndexes) && is_array($tableIndexes)) : ?>
 <?php foreach ($tableIndexes as $name => $data) :?>
 <?php if ($name!='PRIMARY') : ?>
-        $this->createIndex('<?=$name?>','<?=$tableAlias?>','<?=implode(",", array_values($data['cols']))?>',<?=$data['isuniq']?'true':'false'?>);
+        $this->createIndex('<?=$name?>','<?=$tableAlias?>',['<?=implode("','", array_values($data['cols']))?>'],<?=$data['isuniq']?'true':'false'?>);
 <?php endif;?>
 <?php endforeach;?>
 <?php endif?>
+<?php if (!empty($tablePk)) : ?>
+		$this->addPrimaryKey('pk_on_<?=$tableName?>','<?=$tableAlias?>',['<?=implode("','", $tablePk)?>']);
+<?php endif?>
+
     }
 
     public function safeDown()
     {
+<?php if (!empty($tablePk)) : ?>
+	$this->dropPrimaryKey('pk_on_<?=$tableName?>','<?=$tableAlias?>');
+<?php endif?>
 <?php if (!empty($tableIndexes) && is_array($tableIndexes)) : ?>
 <?php foreach ($tableIndexes as $name => $data) :?>
 <?php if ($name!='PRIMARY') : ?>

@@ -5,6 +5,7 @@
  * Date: 08.12.14
  * Time: 8:03
  */
+
 namespace insolita\migrik\gii;
 
 use insolita\migrik\contracts\IMigrationColumnResolver;
@@ -13,6 +14,7 @@ use insolita\migrik\resolver\TableResolver;
 use Yii;
 use yii\db\TableSchema;
 use yii\gii\CodeFile;
+use yii\helpers\ArrayHelper;
 
 set_time_limit(0);
 
@@ -27,88 +29,88 @@ class StructureGenerator extends \yii\gii\Generator
     const MOD_BULK = 'bulk';
     const FORMAT_FLUENT = 'fluent';
     const FORMAT_RAW = 'raw';
-
+    
     use GeneratorTrait;
-
+    
     /**
      * @var string
      */
     public $db = 'db';
-
+    
     /**
      * @var string
      */
     public $migrationPath = '@app/migrations';
-
+    
     /**
      * @var
      */
     public $tableName;
-
+    
     /**
      * @var
      */
     public $tableIgnore;
-
+    
     /**
      * @var string
      */
     public $genmode = self::MOD_SINGLE;
-
+    
     /**
      * @var string
      **/
     public $format = self::FORMAT_FLUENT;
-
+    
     /**
      * @var string
      **/
     public $resolverClass = null;
-
+    
     /**
      * @var bool
      */
     public $usePrefix = true;
-
+    
     /**
      * @var string
      */
     public $tableOptions = 'ENGINE=InnoDB';
-
+    
     /**
      * @var string default value for Foreign key ON_UPDATE
      */
     public $fkOnUpdate = 'CASCADE';
-
+    
     /**
      * @var string default value for Foreign key ON_DELETE
      */
     public $fkOnDelete = 'CASCADE';
-
+    
     /**
      * @var array
      */
     private $_ignoredTables = [];
-
+    
     /**
      * @var array
      */
     private $_tables = [];
-
+    
     /**
      * @var null
      */
     private $tableResolver = null;
-
+    
     /**
      * @inheritdoc
      */
     public function getName()
     {
-
+        
         return 'Migration Generator';
     }
-
+    
     /**
      * @inheritdoc
      */
@@ -116,7 +118,7 @@ class StructureGenerator extends \yii\gii\Generator
     {
         return 'This generator generates migration file for the specified database table.';
     }
-
+    
     /**
      * @inheritdoc
      */
@@ -133,7 +135,8 @@ class StructureGenerator extends \yii\gii\Generator
                     'match',
                     'pattern' => '/[^\w\*_\,\-\s]/',
                     'not'     => true,
-                    'message' => 'Only word characters, underscore, comma,and optionally an asterisk are allowed.'],
+                    'message' => 'Only word characters, underscore, comma,and optionally an asterisk are allowed.',
+                ],
                 [['db'], 'validateDb'],
                 ['migrationPath', 'safe'],
                 ['tableOptions', 'safe'],
@@ -142,25 +145,27 @@ class StructureGenerator extends \yii\gii\Generator
                     ['resolverClass'],
                     'validateClass',
                     'params'      => ['extends' => 'insolita\migrik\contracts\IMigrationColumnResolver'],
-                    'skipOnEmpty' => true],
+                    'skipOnEmpty' => true,
+                ],
                 [['genmode'], 'in', 'range' => [self::MOD_SINGLE, self::MOD_BULK]],
                 [['format'], 'in', 'range' => [self::FORMAT_FLUENT, self::FORMAT_RAW]],
                 [['tableName'], 'validateTableName'],
                 [['fkOnUpdate', 'fkOnDelete'], 'default', 'value' => 'CASCADE'],
-                [['prefix', 'fkOnUpdate', 'fkOnDelete'], 'string'],]
+                [['prefix', 'fkOnUpdate', 'fkOnDelete'], 'string'],
+            ]
         );
     }
-
+    
     /**
      * @inheritdoc
      */
     public function formView()
     {
         $class = new \ReflectionClass($this);
-
+        
         return dirname($class->getFileName()) . '/form_structure.php';
     }
-
+    
     /**
      * @inheritdoc
      */
@@ -180,10 +185,11 @@ class StructureGenerator extends \yii\gii\Generator
                 'resolverClass' => 'Custom RawColumnResolver class',
                 'prefix'        => 'Primary prefix for migrations filenames',
                 'fkOnUpdate'    => 'Default action ON_UPDATE for addForeignKey method',
-                'fkOnDelete'    => 'Default action ON_DELETE for addForeignKey method',]
+                'fkOnDelete'    => 'Default action ON_DELETE for addForeignKey method',
+            ]
         );
     }
-
+    
     /**
      * @inheritdoc
      */
@@ -203,10 +209,11 @@ class StructureGenerator extends \yii\gii\Generator
                 \"foo\"" if custom resolver class configured, this option will be ignored',
                 'resolverClass' => 'Full-qualified class name for custom implementation of 
                 \insolita\migrik\contracts\IMigrationColumnResolver',
-                'prefix'        => 'For correct migration names; format: \'m\' . date(\'ymd_His\'); Don`t change it, if you not sure! ']
+                'prefix'        => 'For correct migration names; format: \'m\' . date(\'ymd_His\'); Don`t change it, if you not sure! ',
+            ]
         );
     }
-
+    
     /**
      * @inheritdoc
      */
@@ -214,7 +221,7 @@ class StructureGenerator extends \yii\gii\Generator
     {
         return ['migration.php', 'relation.php', 'mass.php'];
     }
-
+    
     /**
      * @inheritdoc
      */
@@ -230,10 +237,11 @@ class StructureGenerator extends \yii\gii\Generator
                 'tableIgnore',
                 'resolverClass',
                 'fkOnUpdate',
-                'fkOnDelete']
+                'fkOnDelete',
+            ]
         );
     }
-
+    
     /**
      * @inheritdoc
      */
@@ -245,17 +253,17 @@ class StructureGenerator extends \yii\gii\Generator
             return $this->generateBulkMigration();
         }
     }
-
+    
     /**
      * @inheritdoc
      */
     public function defaultTemplate()
     {
         $class = new \ReflectionClass($this);
-
+        
         return dirname($class->getFileName()) . '/default_structure';
     }
-
+    
     /**
      * @return array
      */
@@ -263,7 +271,7 @@ class StructureGenerator extends \yii\gii\Generator
     {
         return $this->_ignoredTables;
     }
-
+    
     /**
      * @return array
      */
@@ -271,7 +279,7 @@ class StructureGenerator extends \yii\gii\Generator
     {
         return $this->_tables;
     }
-
+    
     /**
      * Validates the [[tableName]] attribute.
      */
@@ -284,7 +292,7 @@ class StructureGenerator extends \yii\gii\Generator
         }
         return true;
     }
-
+    
     /**
      * @return CodeFile[]
      */
@@ -294,7 +302,7 @@ class StructureGenerator extends \yii\gii\Generator
         $allRelations = [];
         foreach ($this->getTables() as $tableName) {
             list(
-                $tableCaption, $tableAlias, $tableIndexes, $tableColumns, $tableRelations
+                $tableCaption, $tableAlias, $tableIndexes, $tableColumns, $tableRelations, $tablePk
                 )
                 = $this->collectTableInfo($tableName);
             if (!empty($tableRelations)) {
@@ -307,7 +315,8 @@ class StructureGenerator extends \yii\gii\Generator
                 'tableAlias',
                 'migrationName',
                 'tableColumns',
-                'tableIndexes'
+                'tableIndexes',
+                'tablePk'
             );
             $files[] = new CodeFile(
                 Yii::getAlias($this->migrationPath) . '/' . $migrationName . '.php',
@@ -319,8 +328,8 @@ class StructureGenerator extends \yii\gii\Generator
             $migrationName = $this->nextPrefix . '_Relations';
             $params = [
                 'tableRelations' => $allRelations,
-                'migrationName' => $migrationName,
-                'fkProps' =>['onUpdate'=>$this->fkOnUpdate,'onDelete'=>$this->fkOnDelete]
+                'migrationName'  => $migrationName,
+                'fkProps'        => ['onUpdate' => $this->fkOnUpdate, 'onDelete' => $this->fkOnDelete],
             ];
             $files[] = new CodeFile(
                 Yii::getAlias($this->migrationPath) . '/' . $migrationName . '.php',
@@ -329,7 +338,7 @@ class StructureGenerator extends \yii\gii\Generator
         }
         return $files;
     }
-
+    
     /**
      * @return CodeFile[]
      */
@@ -340,38 +349,40 @@ class StructureGenerator extends \yii\gii\Generator
         $allTables = [];
         foreach ($this->getTables() as $tableName) {
             list(
-                , $tableAlias, $tableIndexes, $tableColumns, $tableRelations
+                , $tableAlias, $tableIndexes, $tableColumns, $tableRelations, $tablePk
                 )
                 = $this->collectTableInfo($tableName);
-
-            if(!empty($tableRelations)){
+            
+            if (!empty($tableRelations)) {
                 $allRelations[] = $tableRelations;
             }
             $allTables[] = [
-                'alias'   => $tableAlias,
-                'indexes' => $tableIndexes,
-                'columns' => $tableColumns,
-                'name'    => $tableName];
+                'alias'       => $tableAlias,
+                'indexes'     => $tableIndexes,
+                'columns'     => $tableColumns,
+                'tablePk'     => $tablePk,
+                'name'        => $tableName,
+            ];
         }
-
+        
         $suffix = 'Mass';
         if (($tables = $this->getTables()) && sizeof($tables) == 1) {
             $suffix = $tables[0];
         }
-
+        
         $migrationName = $this->prefix . '_' . $suffix;
         $params = [
             'tableList'      => $allTables,
             'tableRelations' => $allRelations,
             'migrationName'  => $migrationName,
-            'fkProps' =>['onUpdate'=>$this->fkOnUpdate,'onDelete'=>$this->fkOnDelete]
+            'fkProps'        => ['onUpdate' => $this->fkOnUpdate, 'onDelete' => $this->fkOnDelete],
         ];
         $files[] = new CodeFile(
             Yii::getAlias($this->migrationPath) . '/' . $migrationName . '.php', $this->render('mass.php', $params)
         );
         return $files;
     }
-
+    
     /**
      * @param $tableName
      *
@@ -383,14 +394,46 @@ class StructureGenerator extends \yii\gii\Generator
         $tableAlias = $this->getTableAlias($tableCaption);
         $tableIndexes = $this->getTableResolver()->getIndexes($tableName);
         $tableColumns = $this->buildColumnDefinitions($tableName);
+        $tablePk = $this->getTableResolver()->getPrimaryKeys($tableName);
+        if (count($tablePk) == 1 && $this->checkIfPkColumnIsInteger($tablePk[0], $tableColumns) === true) {
+            //prevent pk duplication, if it set in column definition
+            $tablePk = [];
+        }
         $relations = $this->getTableResolver()->getRelations($tableName);
         $tableRelations = !empty($relations) ? [
             'fKeys'      => $relations,
             'tableAlias' => $tableAlias,
-            'tableName'  => $tableName] : [];
-        return [$tableCaption, $tableAlias, $tableIndexes, $tableColumns, $tableRelations];
+            'tableName'  => $tableName,
+        ] : [];
+        return [$tableCaption, $tableAlias, $tableIndexes, $tableColumns, $tableRelations, $tablePk];
     }
-
+    
+    /**
+     * @param $pk
+     * @param $tableColumns
+     *
+     * @return bool
+     */
+    protected function checkIfPkColumnIsInteger($pk, $tableColumns)
+    {
+        $pkColumn = ArrayHelper::getValue($tableColumns, $pk);
+        $check = false;
+        if ($this->format === self::FORMAT_FLUENT) {
+            if (mb_strpos($pkColumn, 'primaryKey') !== false || mb_strpos($pkColumn, 'bigPrimaryKey') !== false) {
+                $check = true;
+            }
+        } else {
+            if (mb_strpos($pkColumn, 'TYPE_PK') !== false
+                || mb_strpos($pkColumn, 'TYPE_UPK') !== false
+                || mb_strpos($pkColumn, 'TYPE_BIGPK') !== false
+                || mb_strpos($pkColumn, 'TYPE_UBIGPK') !== false
+            ) {
+                $check = true;
+            }
+        }
+        return $check;
+    }
+    
     /**
      * @return IMigrationTableResolver|TableResolver
      **/
@@ -407,7 +450,7 @@ class StructureGenerator extends \yii\gii\Generator
         }
         return $this->tableResolver;
     }
-
+    
     /**
      * @param string $tableName
      *
@@ -424,7 +467,7 @@ class StructureGenerator extends \yii\gii\Generator
         }
         return $cols;
     }
-
+    
     /**
      * @param TableSchema $tableSchema
      *
@@ -434,7 +477,8 @@ class StructureGenerator extends \yii\gii\Generator
     {
         $params = [
             $this->getDbConnection()->schema,
-            $tableSchema];
+            $tableSchema,
+        ];
         if ($this->resolverClass) {
             return Yii::createObject(['class' => $this->resolverClass], $params);
         } elseif ($this->format == 'fluent') {
@@ -443,7 +487,7 @@ class StructureGenerator extends \yii\gii\Generator
             return Yii::createObject(['class' => 'insolita\migrik\resolver\RawColumnResolver'], $params);
         }
     }
-
+    
     /**
      * List of table names that match the pattern specified by [[tableName]].
      *
@@ -474,7 +518,7 @@ class StructureGenerator extends \yii\gii\Generator
         }
         return $this->_tables;
     }
-
+    
     /**
      * List of table names that match the pattern specified by [[tableName]].
      *

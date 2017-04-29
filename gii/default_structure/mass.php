@@ -38,10 +38,15 @@ class <?= $migrationName ?> extends Migration
 <?php if (!empty($tableData['indexes']) && is_array($tableData['indexes'])) :?>
 <?php foreach ($tableData['indexes'] as $name => $data) :?>
 <?php if ($name!='PRIMARY') :?>
-            $this->createIndex('<?=$name?>','<?=$tableData['alias']?>','<?=implode(",", array_values($data['cols']))?>',<?=$data['isuniq']?'true':'false'?>);
+            $this->createIndex('<?=$name?>','<?=$tableData['alias']?>',['<?=implode("','", array_values($data['cols']))
+				?>'],<?=$data['isuniq']?'true':'false'?>);
 <?php endif;?>
 <?php endforeach;?>
 <?php endif?>
+    <?php if (!empty($tableData['tablePk'])) : ?>
+		$this->addPrimaryKey('pk_on_<?=$tableData['name']?>','<?=$tableData['alias']?>',
+		['<?=implode("','",$tableData['tablePk'])?>']);
+    <?php endif?>
 <?php endforeach;?>
 <?php if (!empty($tableRelations) && is_array($tableRelations)) :?>
 <?php foreach ($tableRelations as $table) :?>
@@ -63,6 +68,9 @@ class <?= $migrationName ?> extends Migration
 <?php endforeach;?>
 <?php endif?>
 <?php foreach ($tableList as $tableData) :?>
+    <?php if (!empty($tableData['tablePk'])) : ?>
+		$this->dropPrimaryKey('pk_on_<?=$tableData['name']?>','<?=$tableData['alias']?>');
+    <?php endif?>
             $this->dropTable('<?= ($generator->usePrefix)?$tableData['alias']:$tableData['name']?>');
 <?php endforeach;?>
 
