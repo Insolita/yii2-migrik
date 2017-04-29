@@ -36,9 +36,16 @@ interface IMigrationTableResolver
     /**
      * @param $tableName
      *
-     * @return TableSchema
+     * @return \yii\db\TableSchema
      */
     public function getTableSchema($tableName);
+    
+    /**
+     * @param $tableName
+     *
+     * @return \string[]
+     */
+    public function getPrimaryKeys($tableName);
 
     /**
      * @param string $tableName
