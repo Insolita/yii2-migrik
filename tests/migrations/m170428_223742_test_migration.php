@@ -110,7 +110,7 @@ class m170428_223742_test_migration extends Migration
             ]
         );
         $this->addPrimaryKey('otherPk', 'migrik_testcomposite', ['id', 'otherId']);
-        if (mb_strpos($this->getDb()->dsn, 'pgsql') !== false) {
+        if ($this->getDb()->driverName === 'pgsql') {
             $this->createTable(
                 'migrik_pgspec',
                 [
@@ -124,7 +124,7 @@ class m170428_223742_test_migration extends Migration
     
     public function safeDown()
     {
-        if (mb_strpos($this->getDb()->dsn, 'pgsql') !== false) {
+        if ($this->getDb()->driverName === 'pgsql') {
             $this->dropTable('migrik_pgspec');
         }
         $this->dropPrimaryKey('otherPk', 'migrik_testcomposite');
