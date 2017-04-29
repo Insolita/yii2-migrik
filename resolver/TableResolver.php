@@ -5,11 +5,9 @@
 
 namespace insolita\migrik\resolver;
 
-
 use insolita\migrik\contracts\IMigrationTableResolver;
 use yii\db\Connection;
 use yii\db\TableSchema;
-use yii\helpers\ArrayHelper;
 
 /**
  * Class TableResolver
@@ -22,15 +20,17 @@ class TableResolver implements IMigrationTableResolver
      * @var \yii\db\Schema
      */
     public $schema;
+    
     /**
      * @var array
      */
     protected $tableSchemas = [];
+    
     /**
      * @var \yii\db\Connection
      */
     private $connection;
-
+    
     /**
      * Base constructor.
      *
@@ -41,7 +41,7 @@ class TableResolver implements IMigrationTableResolver
         $this->connection = $connection;
         $this->schema = $this->connection->getSchema();
     }
-
+    
     /**
      * @param string $tablePattern
      *
@@ -62,13 +62,13 @@ class TableResolver implements IMigrationTableResolver
                     $founds[] = $table;
                 }
             }
-
+            
         } elseif ($this->getTableSchema($tablePattern) !== null) {
             $founds[] = $tablePattern;
         }
         return $founds;
     }
-
+    
     /**
      * @return array
      **/
@@ -76,7 +76,7 @@ class TableResolver implements IMigrationTableResolver
     {
         return $this->schema->tableNames;
     }
-
+    
     /**
      * @param $tableName
      *
@@ -89,7 +89,18 @@ class TableResolver implements IMigrationTableResolver
         }
         return $this->tableSchemas[$tableName];
     }
-
+    
+    /**
+     * @param $tableName
+     *
+     * @return \string[]
+     */
+    public function getPrimaryKeys($tableName)
+    {
+        $tableSchema = $this->getTableSchema($tableName);
+        return $tableSchema->primaryKey;
+    }
+    
     /**
      * @param string $tableName
      *
@@ -97,7 +108,7 @@ class TableResolver implements IMigrationTableResolver
      **/
     public function getRelations($tableName)
     {
-
+        
         $tableSchema = $this->getTableSchema($tableName);
         $relations = [];
         if (!empty($tableSchema->foreignKeys)) {
@@ -114,7 +125,7 @@ class TableResolver implements IMigrationTableResolver
         }
         return $relations;
     }
-
+    
     /**
      * @param string $tableName
      *
@@ -122,14 +133,15 @@ class TableResolver implements IMigrationTableResolver
      **/
     public function getIndexes($tableName)
     {
-
+        
         $tableSchema = $this->getTableSchema($tableName);
         $indexes = [];
         if ($this->connection->driverName == 'mysql') {
             $query = $this->connection->createCommand('SHOW INDEX FROM [[' . $tableName . ']]')->queryAll();
             if ($query) {
                 foreach ($query as $i => $index) {
-                    $indexes[$index['Key_name']]['cols'][$index['Seq_in_index']] = $index['Column_name'];
+                    $indexes[$index['Key_name']]['cols'][$index['Seq_in_index']] =
+                        trim($index['Column_name'],'\'"');
                     $indexes[$index['Key_name']]['isuniq'] = ($index['Non_unique'] == 1) ? false : true;
                 }
             }
@@ -138,8 +150,8 @@ class TableResolver implements IMigrationTableResolver
             if (!empty($schemaIndexes)) {
                 foreach ($schemaIndexes as $i => $columns) {
                     if (!$columns['ispk']) {
-                        $indexes[$columns['indexname']]['cols'][] = $columns['columnname'];
-                        $indexes[$columns['indexname']]['isuniq'] = $columns['isuniq']?true:false;
+                        $indexes[$columns['indexname']]['cols'][] = trim($columns['columnname'],'\'"');
+                        $indexes[$columns['indexname']]['isuniq'] = $columns['isuniq'] ? true : false;
                     }
                 }
             }
@@ -147,14 +159,14 @@ class TableResolver implements IMigrationTableResolver
             $schemaIndexes = call_user_func([$this->schema, 'findUniqueIndexes'], $tableSchema);
             if (!empty($schemaIndexes)) {
                 foreach ($schemaIndexes as $indexName => $columns) {
-                    $indexes[$indexName]['cols'] = $columns;
+                    $indexes[$indexName]['cols'] = array_walk($columns, function (&$v){$v=trim($v,'\'"');});
                     $indexes[$indexName]['isuniq'] = 1;
                 }
             }
         }
         return $indexes;
     }
-
+    
     protected function fetchPqSqlIndexes($schemaName, $tableName)
     {
         $sql
@@ -176,9 +188,9 @@ SQL;
             $sql,
             [
                 ':schemaName' => $schemaName,
-                ':tableName' => $tableName,
+                ':tableName'  => $tableName,
             ]
         )->queryAll();
     }
-
+    
 }
