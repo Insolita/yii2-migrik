@@ -7,9 +7,17 @@ return [
     'components' => [
         'db' => [
             'class' => \yii\db\Connection::class,
-            'dsn' => getenv('DB_DSN'),
-            'username' => getenv('DB_USER'),
-            'password' => getenv('DB_PASSWORD'),
+            'dsn' => getenv('PG_DSN'),
+            'username' => getenv('PG_USER'),
+            'password' => getenv('PG_PASSWORD'),
+            'charset' => 'utf8',
+            'tablePrefix'=>'itt_',
+        ],
+        'dbmm' => [
+            'class' => \yii\db\Connection::class,
+            'dsn' => getenv('MYSQL_DSN'),
+            'username' => getenv('MYSQL_USER'),
+            'password' => getenv('MYSQL_PASSWORD'),
             'charset' => 'utf8',
             'tablePrefix'=>'itt_',
         ],

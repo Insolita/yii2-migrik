@@ -400,6 +400,9 @@ class StructureGenerator extends \yii\gii\Generator
             $tablePk = [];
         }
         $relations = $this->getTableResolver()->getRelations($tableName);
+        array_walk($relations, function (&$value){
+            $value['ftable'] = $this->getTableAlias($this->getTableCaption($value['ftable']));
+        });
         $tableRelations = !empty($relations) ? [
             'fKeys'      => $relations,
             'tableAlias' => $tableAlias,
@@ -482,9 +485,25 @@ class StructureGenerator extends \yii\gii\Generator
         if ($this->resolverClass) {
             return Yii::createObject(['class' => $this->resolverClass], $params);
         } elseif ($this->format == 'fluent') {
-            return Yii::createObject(['class' => 'insolita\migrik\resolver\FluentColumnResolver'], $params);
+            switch ($this->getDbConnection()->driverName){
+                case 'pgsql': {
+                    return Yii::createObject(['class' => 'insolita\migrik\resolver\PgFluentColumnResolver'], $params);
+                }
+                case 'mysql':
+                default: {
+                    return Yii::createObject(['class' => 'insolita\migrik\resolver\FluentColumnResolver'], $params);
+                }
+            }
         } else {
-            return Yii::createObject(['class' => 'insolita\migrik\resolver\RawColumnResolver'], $params);
+            switch ($this->getDbConnection()->driverName){
+                case 'pgsql': {
+                    return Yii::createObject(['class' => 'insolita\migrik\resolver\PgRawColumnResolver'], $params);
+                }
+                case 'mysql':
+                default: {
+                    return Yii::createObject(['class' => 'insolita\migrik\resolver\RawColumnResolver'], $params);
+                }
+            }
         }
     }
     

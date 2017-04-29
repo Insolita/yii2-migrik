@@ -11,6 +11,7 @@ use yii\db\ColumnSchemaBuilder;
 use yii\db\Schema;
 use yii\db\TableSchema;
 use yii\helpers\ArrayHelper;
+use yii\helpers\StringHelper;
 
 /**
  * Class BaseColumnResolver
@@ -72,6 +73,15 @@ abstract class BaseColumnResolver implements IMigrationColumnResolver
             $column->comment = $this->defaultCommentsByColumnName($column->name);
         }
         $columnTypeMethod = 'resolve' . ucfirst($column->dbType) . 'Type';
+        if(StringHelper::startsWith($column->dbType, 'enum(')){
+            $columnTypeMethod = 'resolveEnumType';
+        }
+        if(StringHelper::startsWith($column->dbType, 'set(')){
+            $columnTypeMethod = 'resolveSetType';
+        }
+        if(StringHelper::startsWith($column->dbType, '_')){
+            $columnTypeMethod = 'resolveArrayType';
+        }
         if (method_exists($this, $columnTypeMethod)) {
             \Yii::trace('try to call customMethod "' . $columnTypeMethod . '"', __METHOD__);
             return call_user_func([$this, $columnTypeMethod], $column);

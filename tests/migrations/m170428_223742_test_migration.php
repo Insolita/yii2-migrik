@@ -6,6 +6,7 @@ class m170428_223742_test_migration extends Migration
 {
     public function safeUp()
     {
+        echo $this->getDb()->dsn . PHP_EOL;
         $this->createTable(
             'migrik_test1',
             [
@@ -25,7 +26,7 @@ class m170428_223742_test_migration extends Migration
                 'dateField'      => $this->date(),
                 'binaryField'    => $this->binary(),
                 'boolField'      => $this->boolean(),
-                'moneyField'     => $this->money(5,1),
+                'moneyField'     => $this->money(5, 1),
             ]
         );
         $this->createIndex(
@@ -55,7 +56,7 @@ class m170428_223742_test_migration extends Migration
                 'dateField'      => $this->date()->null(),
                 'binaryField'    => $this->binary()->null(),
                 'boolField'      => $this->boolean()->null(),
-                'moneyField'     => $this->money(5,2)->null(),
+                'moneyField'     => $this->money(5, 2)->null(),
             ]
         );
         $this->createIndex('strFieldUniq', 'migrik_test2', ['strField'], true);
@@ -69,8 +70,8 @@ class m170428_223742_test_migration extends Migration
                 'smallintField'  => $this->smallInteger(3)->defaultValue(2),
                 'intField'       => $this->integer(11)->notNull()->defaultValue(3),
                 'bigintField'    => $this->bigInteger()->notNull()->defaultValue(4),
-                'floatField'     => $this->float(2)->defaultValue(323.33),
-                'doubleField'    => $this->double(5)->defaultValue(323.33),
+                'floatField'     => $this->float(10, 2)->defaultValue(323.33),
+                'doubleField'    => $this->double(5, 2)->defaultValue(323.33),
                 'decimalField'   => $this->decimal(5, 2)->defaultValue(323.33),
                 'timeStampField' => $this->timestamp(0)->defaultValue(
                     \Carbon\Carbon::create(2005, 9, 21, 10, 40, 01)
@@ -83,7 +84,7 @@ class m170428_223742_test_migration extends Migration
                     Carbon\Carbon::createFromDate(2005, 9, 21)->toDateString()
                 ),
                 'boolField'      => $this->boolean()->defaultValue(false),
-                'moneyField'     => $this->money(8,2)->defaultValue(334),
+                'moneyField'     => $this->money(8, 2)->defaultValue(334),
             ]
         );
         
@@ -108,16 +109,38 @@ class m170428_223742_test_migration extends Migration
         );
         $this->addPrimaryKey('otherPk', 'migrik_testcomposite', ['id', 'otherId']);
         
+        $this->createTable(
+            'migrik_model',
+            [
+                'id'             => $this->primaryKey(),
+                'username'       => $this->string(255)->notNull(),
+                'email'          => $this->string(255)->notNull(),
+                'password'       => $this->string(255)->notNull(),
+                'remember_token' => $this->string(100),
+                'access_token'   => $this->string(100),
+                'created_at'     => $this->timestamp(),
+                'updated_at'     => $this->timestamp(),
+                'role'           => $this->string(15)->notNull()->defaultValue('user'),
+            ]
+        );
+        
         if ($this->getDb()->driverName === 'pgsql') {
             $this->createTable(
                 'migrik_pgspec',
                 [
-                    'id'        => $this->char(30)->unique()->notNull(),
-                    'arrField'  => 'int[]',
-                    'jsonField' => 'JSON',
-                    'datetimeField'  => $this->dateTime(0)->defaultExpression('NOW()'),
-                    'binaryField'    => $this->binary()->defaultValue('DummyVal'),
-                    'zval'  => $this->text(500)->null()->defaultValue('dummy'),
+                    'id'            => $this->char(30)->unique()->notNull(),
+                    'arrField'      => 'int[]',
+                    'arrField2'     => 'text[]',
+                    'arrField3'     => 'int[] NULL DEFAULT ARRAY[2,3,4,5,6]',
+                    'arrField4'     => "text[] NOT NULL DEFAULT ARRAY['this','some','test','data']",
+                    'arrField5'      => 'int[2] NOT NULL',
+                    'arrField6'      => 'int[][] NOT NULL',
+                    'jsonField'     => 'JSON NULL',
+                    'jsonField2'    => "JSON DEFAULT '".json_encode(['one' => 'foo', 'two' => 'bar'])."'",
+                    'datetimeField' => $this->dateTime(0)->defaultExpression('NOW()'),
+                    'binaryField'   => $this->binary()->defaultValue('DummyVal'),
+                    'zval'          => $this->text(500)->null()->defaultValue('dummy'),
+
                 ]
             );
         }
@@ -125,20 +148,23 @@ class m170428_223742_test_migration extends Migration
             $this->createTable(
                 'migrik_myspec',
                 [
-                    'id'        => $this->char(30)->unique()->notNull(),
-                    'enum'  => "ENUM('uno','dos','tres') DEFAULT  'dos'",
-                    'set' => "SET('one','two','three') DEFAULT  'two'",
-                    'timeStampField'  => $this->timestamp(0)->defaultExpression('CURRENT_TIMESTAMP'),
-                ],'ENGINE=INNODB;'
+                    'id'             => $this->char(30)->unique()->notNull(),
+                    'enum'           => "ENUM('uno','dos','tres') DEFAULT  'dos'",
+                    'set'            => "SET('one','two','three') DEFAULT  'two'",
+                    'timeStampField' => $this->timestamp(0)->defaultExpression('CURRENT_TIMESTAMP'),
+                ],
+                'ENGINE=INNODB;'
             );
         }
     }
     
     public function safeDown()
     {
+        echo $this->getDb()->dsn . PHP_EOL;
+        
         if ($this->getDb()->driverName === 'pgsql') {
             $this->dropTable('migrik_pgspec');
-        }elseif($this->getDb()->driverName === 'mysql'){
+        } elseif ($this->getDb()->driverName === 'mysql') {
             $this->dropTable('migrik_myspec');
         }
         $this->dropPrimaryKey('otherPk', 'migrik_testcomposite');
@@ -150,5 +176,6 @@ class m170428_223742_test_migration extends Migration
         $this->dropTable('migrik_test2');
         $this->dropIndex('complexIdx', 'migrik_test1');
         $this->dropTable('migrik_test1');
+        $this->dropTable('migrik_model');
     }
 }

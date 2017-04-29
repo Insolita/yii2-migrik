@@ -16,43 +16,28 @@ use yii\db\TableSchema;
 /**
  * @var Verify
  **/
-class TableResolverTest extends Unit
+class TableResolverMysqlTest extends Unit
 {
     use Specify;
     
-    public function setUp()
+    protected $db;
+    protected function _before()
     {
-        parent::setUp();
+        $this->db =  \Yii::$app->dbmm;
+        Debug::debug($this->db->dsn);
     }
-    
-    public function tearDown()
-    {
-        parent::tearDown();
-    }
-    
-    public function fixtures()
-    {
-        return [
-        
-        ];
-    }
-    
+
     public function testGetSchema()
     {
-        $resolver = new TableResolver(\Yii::$app->getDb());
+        $resolver = new TableResolver($this->db);
         $schema = $resolver->schema;
         verify($schema)->isInstanceOf(Schema::class);
-        if (\Yii::$app->getDb()->driverName === 'pgsql') {
-            verify($schema)->isInstanceOf(\yii\db\pgsql\Schema::class);
-        }
-        if (\Yii::$app->getDb()->driverName === 'mysql') {
-            verify($schema)->isInstanceOf(\yii\db\mysql\Schema::class);
-        }
+        verify($schema)->isInstanceOf(\yii\db\mysql\Schema::class);
     }
     
     public function testGetTableSchema()
     {
-        $resolver = new TableResolver(\Yii::$app->getDb());
+        $resolver = new TableResolver($this->db);
         $tableSchema = $resolver->getTableSchema('migrik_test1');
         verify_that($tableSchema);
         verify($tableSchema)->isInstanceOf(TableSchema::class);
@@ -60,7 +45,7 @@ class TableResolverTest extends Unit
     
     public function testGetTableNames()
     {
-        $resolver = new TableResolver(\Yii::$app->getDb());
+        $resolver = new TableResolver($this->db);
         $tableNames = $resolver->getTableNames();
         verify($tableNames)->notEmpty();
         verify($tableNames)->contains('migrik_test1');
@@ -69,7 +54,7 @@ class TableResolverTest extends Unit
     
     public function testFindTablesByPattern()
     {
-        $resolver = new TableResolver(\Yii::$app->getDb());
+        $resolver = new TableResolver($this->db);
         $this->specify(
             'by table name',
             function () use ($resolver) {
@@ -104,7 +89,7 @@ class TableResolverTest extends Unit
     
     public function testGetRelations()
     {
-        $resolver = new TableResolver(\Yii::$app->getDb());
+        $resolver = new TableResolver($this->db);
         $this->specify(
             'by no relationed table',
             function () use ($resolver) {
@@ -120,19 +105,19 @@ class TableResolverTest extends Unit
                 verify($founds)->notEmpty();
                 verify(count($founds))->equals(1);
                 verify($founds['someIdx'])->equals(['ftable' => 'migrik_test3', 'pk' => 'extId', 'fk' => 'id']);
-                Debug::debug($founds);
             }
         );
     }
     
     public function testGetIndexes()
     {
-        $resolver = new TableResolver(\Yii::$app->getDb());
+        $resolver = new TableResolver($this->db);
         $this->specify(
             'not indexed',
             function () use ($resolver) {
                 $founds = $resolver->getIndexes('migrik_test3');
-                verify(count($founds))->equals(0);
+                verify(count($founds))->equals(1);
+                \verify($founds)->hasKey('PRIMARY');
             }
         );
         
@@ -140,33 +125,37 @@ class TableResolverTest extends Unit
             'indexed',
             function () use ($resolver) {
                 $founds = $resolver->getIndexes('migrik_test2');
-                verify(count($founds))->equals(1);
-                Debug::debug($founds);
+                verify(count($founds))->equals(2);
+                \verify($founds)->hasKey('PRIMARY');
+                \verify($founds)->hasKey('strFieldUniq');
     
                 $founds = $resolver->getIndexes('migrik_test1');
-                verify(count($founds))->equals(2);
-                Debug::debug($founds);
+                verify(count($founds))->equals(3);
+                \verify($founds)->hasKey('PRIMARY');
+                \verify($founds)->hasKey('complexIdx');
+                \verify($founds)->hasKey('smallintField');
+    
             }
         );
-        if(\Yii::$app->getDb()->driverName === 'pgsql'){
-            $this->specify('pgspec',function () use($resolver){
-                $founds = $resolver->getIndexes('migrik_pgspec');
+            $this->specify('myspec',function () use($resolver){
+                $founds = $resolver->getIndexes('migrik_myspec');
                 verify(count($founds))->equals(1);
-                Debug::debug($founds);
+                \verify($founds)->hasKey('id');
+    
             });
-        }
         $this->specify(
             'composite',
             function () use ($resolver) {
                 $founds = $resolver->getIndexes('migrik_testcomposite');
-                verify(count($founds))->equals(0);
+                verify(count($founds))->equals(1);
+                \verify($founds)->hasKey('PRIMARY');
             }
         );
     }
     
     public function testGetPimaryKeys()
     {
-        $resolver = new TableResolver(\Yii::$app->getDb());
+        $resolver = new TableResolver($this->db);
         $this->specify(
             'simplePk',
             function () use ($resolver){
@@ -181,13 +170,7 @@ class TableResolverTest extends Unit
                 verify($pk[0])->equals('id');
             }
         );
-        if(\Yii::$app->getDb()->driverName === 'pgsql'){
-            $this->specify('noPk',function () use($resolver){
-                $pk = $resolver->getPrimaryKeys('migrik_pgspec');
-                verify(is_array($pk))->true();
-                verify(count($pk))->equals(0);
-            });
-        }
+
         $this->specify(
             'compositePk',
             function () use ($resolver){

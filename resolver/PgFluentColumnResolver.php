@@ -10,12 +10,12 @@ use yii\db\Schema;
 use yii\helpers\StringHelper;
 
 /**
- * Class FluentColumnResolver
+ * Class PgFluentColumnResolver
  * Generate columns in new yii2 fluent style
  *
  * @package insolita\migrik\resolver
  */
-class FluentColumnResolver extends BaseColumnResolver
+class PgFluentColumnResolver extends BaseColumnResolver
 {
     /**
      * @param \yii\db\ColumnSchema $column
@@ -27,7 +27,7 @@ class FluentColumnResolver extends BaseColumnResolver
         list($type, $size, $default, $nullable, $comment) = $this->resolveCommon($column);
         return $this->buildString([$type . $size, $nullable, $default, $comment]);
     }
-
+    
     /**
      * @param \yii\db\ColumnSchema $column
      *
@@ -38,8 +38,8 @@ class FluentColumnResolver extends BaseColumnResolver
         $pk = $this->tableSchema->primaryKey;
         /**
          * fix #35 Skip pk definition build, if $pk is composite
-        **/
-        if (count($pk)===1 && in_array($column->name, $pk)) {
+         **/
+        if (count($pk) === 1 && in_array($column->name, $pk)) {
             $column->type = ($column->type == Schema::TYPE_BIGINT ? 'bigPrimaryKey' : 'primaryKey');
             return $this->resolvePk($column);
         }
@@ -52,7 +52,7 @@ class FluentColumnResolver extends BaseColumnResolver
         $unsigned = $column->unsigned ? 'unsigned()' : '';
         return $this->buildString([$type . $size, $unsigned, $nullable, $default, $comment]);
     }
-
+    
     /**
      * @param \yii\db\ColumnSchema $column
      *
@@ -71,7 +71,7 @@ class FluentColumnResolver extends BaseColumnResolver
             ? 'unsigned()' : '';
         return $this->buildString([$type . $size, $unsigned, $comment]);
     }
-   
+    
     /**
      * @param \yii\db\ColumnSchema $column
      *
@@ -93,7 +93,7 @@ class FluentColumnResolver extends BaseColumnResolver
         }
         return $this->buildString([$type . $size, $nullable, $default, $comment]);
     }
-
+    
     /**
      * @param \yii\db\ColumnSchema $column
      *
@@ -107,11 +107,11 @@ class FluentColumnResolver extends BaseColumnResolver
         }
         return $this->buildString([$type . $size, $nullable, $default, $comment]);
     }
-
+    
     /**
      * @param \yii\db\ColumnSchema $column
      *
-     * @return array
+     * @return string
      */
     protected function resolveCommon(ColumnSchema $column)
     {
@@ -123,45 +123,19 @@ class FluentColumnResolver extends BaseColumnResolver
             $type = 'bigInteger';
         }
         $size = $column->size ? '(' . $column->size . ')' : '()';
-        $default = $this->buildDefaultValue($column);
-        $nullable = $column->allowNull === true ? 'null()' : 'notNull()';
-
+        if ($column->allowNull === true && $column->defaultValue === null) {
+            $nullable = '!skip';
+            $default = '!skip';
+        } else {
+            $default = $this->buildDefaultValue($column);
+            $nullable = $column->allowNull === true ? 'null()' : 'notNull()';
+        }
+        
         $comment = $column->comment ? ("comment(" . $this->schema->quoteValue($column->comment) . ")") : '';
-
+        
         return [$type, $size, $default, $nullable, $comment];
     }
-    /**
-     * @param \yii\db\ColumnSchema $column
-     *
-     * @return string
-     */
-    protected function resolveEnumType(ColumnSchema $column)
-    {
-        $default = $this->buildRawDefaultValue($column);
-        $nullable = $column->allowNull ? 'NULL' : 'NOT NULL';
-        $comment = $column->comment ? ("COMMENT " . $this->schema->quoteValue($column->comment)) : '';
-        if ($column->enumValues) {
-            $enum = "enum(" . implode(', ', array_map([$this->schema, 'quoteValue'], $column->enumValues)) . ")";
-        } else {
-            return "";
-        }
-        $columns = implode(' ', array_filter(array_map('trim', [$nullable, $default, $comment]), 'trim'));
-        return '"' . $enum . ' ' . $columns . '"';
-    }
-    /**
-     * @param \yii\db\ColumnSchema $column
-     *
-     * @return string
-     */
-    protected function resolveSetType(ColumnSchema $column)
-    {
-        $set = $column->dbType;
-        $default = $this->buildRawDefaultValue($column);
-        $nullable = $column->allowNull ? 'NULL' : 'NOT NULL';
-        $comment = $column->comment ? ("COMMENT " . $this->schema->quoteValue($column->comment)) : '';
-        $columns = implode(' ', array_filter(array_map('trim', [$nullable, $default, $comment]), 'trim'));
-        return '"' . $set . ' ' . $columns . '"';
-    }
+    
     /**
      * Builds the default value specification for the column.
      *
@@ -172,9 +146,9 @@ class FluentColumnResolver extends BaseColumnResolver
     protected function buildDefaultValue(ColumnSchema $column)
     {
         if ($column->defaultValue === null) {
-            return $column->allowNull === true ? 'defaultValue(null)' : '';
+            return $column->allowNull === true ? 'defaultValue(null)' : '!skip';
         }
-
+        
         switch (gettype($column->defaultValue)) {
             case 'integer':
                 $string = 'defaultValue(' . $column->defaultValue . ')';
@@ -189,13 +163,58 @@ class FluentColumnResolver extends BaseColumnResolver
             case 'object':
                 $string = 'defaultExpression("' . (string)$column->defaultValue . '")';
                 break;
-            default:
-                $string = "defaultValue('{$column->defaultValue}')";
+            default: {
+                if (mb_stripos($column->defaultValue, 'NULL::') !== false) {
+                    $string = '!skip';
+                } else {
+                    $string = "defaultValue('{$column->defaultValue}')";
+                }
+            }
         }
-
+        
         return $string;
     }
-
+    
+    /**
+     * @param \yii\db\ColumnSchema $column
+     */
+    protected function resolveJsonType(ColumnSchema $column)
+    {
+        $default = '';
+        $nullable = $column->allowNull ? '' : 'NOT NULL';
+        if ($column->allowNull === true && $column->defaultValue === null) {
+            $nullable = '';
+        } elseif ($column->defaultValue === null) {
+            $default = $column->allowNull === true ? ' DEFAULT NULL' : '';
+        } else{
+            $default = "DEFAULT '{$column->defaultValue}'";
+        }
+        $comment = $column->comment ? ("COMMENT " . $this->schema->quoteValue($column->comment)) : '';
+        $default = preg_replace('~[\"]~', '\"', $default);
+        $columns = implode(' ', array_filter([$nullable, $default, $comment], 'trim'));
+        return '"' . trim('json ' . $columns) . '"';
+    }
+    
+    /**
+     * @param \yii\db\ColumnSchema $column
+     */
+    protected function resolveArrayType(ColumnSchema $column)
+    {
+        $default = '';
+        $nullable = $column->allowNull ? '' : 'NOT NULL';
+        if ($column->allowNull === true && $column->defaultValue === null) {
+            $nullable = '';
+        } elseif ($column->defaultValue === null) {
+            $default = $column->allowNull === true ? ' DEFAULT NULL' : '';
+        } elseif(mb_stripos($column->defaultValue, 'array') !== false){
+            $default = "DEFAULT " . preg_replace('~[\"]~', "'", $column->defaultValue);
+        }
+        $comment = $column->comment ? ("COMMENT " . $this->schema->quoteValue($column->comment)) : '';
+        $type = preg_replace('~([^A-Za-z])~', '', $column->dbType);
+        $columns = implode(' ', array_filter([$nullable, $default, $comment], 'trim'));
+        return '"' . trim($type . '[] ' . $columns) . '"';
+    }
+    
     /**
      * @param array $columnParts
      *
@@ -203,41 +222,13 @@ class FluentColumnResolver extends BaseColumnResolver
      **/
     protected function buildString(array $columnParts)
     {
-        $columnParts = array_filter($columnParts, function($v){return $v!=='!skip';});
+        $columnParts = array_filter(
+            $columnParts,
+            function ($v) {
+                return $v !== '!skip';
+            }
+        );
         array_unshift($columnParts, '$this');
         return implode('->', array_filter(array_map('trim', $columnParts), 'trim'));
-    }
-    
-    /**
-     * Builds the default value specification for the column.
-     *
-     * @return string string with default value of column.
-     */
-    protected function buildRawDefaultValue(ColumnSchema $column)
-    {
-        if ($column->defaultValue === null) {
-            return $column->allowNull === true ? ' DEFAULT NULL' : '';
-        }
-        
-        $string = 'DEFAULT ';
-        switch (gettype($column->defaultValue)) {
-            case 'integer':
-                $string .= (string)$column->defaultValue;
-                break;
-            case 'double':
-                // ensure type cast always has . as decimal separator in all locales
-                $string .= str_replace(',', '.', (string)$column->defaultValue);
-                break;
-            case 'boolean':
-                $string .= $column->defaultValue ? 'TRUE' : 'FALSE';
-                break;
-            case 'object':
-                $string .= (string)$column->defaultValue;
-                break;
-            default:
-                $string .= "'{$column->defaultValue}'";
-        }
-        
-        return $string;
     }
 }

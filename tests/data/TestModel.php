@@ -47,6 +47,6 @@ class TestModel extends ActiveRecord
 
     public static function tableName()
     {
-        return '{{%users}}';
+        return 'migrik_model';
     }
 }
