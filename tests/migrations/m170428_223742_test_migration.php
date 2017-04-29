@@ -25,7 +25,7 @@ class m170428_223742_test_migration extends Migration
                 'dateField'      => $this->date(),
                 'binaryField'    => $this->binary(),
                 'boolField'      => $this->boolean(),
-                'moneyField'     => $this->money(5),
+                'moneyField'     => $this->money(5,1),
             ]
         );
         $this->createIndex(
@@ -55,7 +55,7 @@ class m170428_223742_test_migration extends Migration
                 'dateField'      => $this->date()->null(),
                 'binaryField'    => $this->binary()->null(),
                 'boolField'      => $this->boolean()->null(),
-                'moneyField'     => $this->money(2)->null(),
+                'moneyField'     => $this->money(5,2)->null(),
             ]
         );
         $this->createIndex('strFieldUniq', 'migrik_test2', ['strField'], true);
@@ -72,7 +72,6 @@ class m170428_223742_test_migration extends Migration
                 'floatField'     => $this->float(2)->defaultValue(323.33),
                 'doubleField'    => $this->double(5)->defaultValue(323.33),
                 'decimalField'   => $this->decimal(5, 2)->defaultValue(323.33),
-                'datetimeField'  => $this->dateTime(0)->defaultExpression('NOW()'),
                 'timeStampField' => $this->timestamp(0)->defaultValue(
                     \Carbon\Carbon::create(2005, 9, 21, 10, 40, 01)
                                   ->format('Y-m-d H:i:s.u')
@@ -83,9 +82,8 @@ class m170428_223742_test_migration extends Migration
                 'dateField'      => $this->date()->defaultValue(
                     Carbon\Carbon::createFromDate(2005, 9, 21)->toDateString()
                 ),
-                'binaryField'    => $this->binary()->defaultValue('DummyVal'),
                 'boolField'      => $this->boolean()->defaultValue(false),
-                'moneyField'     => $this->money(2)->defaultValue(334),
+                'moneyField'     => $this->money(8,2)->defaultValue(334),
             ]
         );
         
@@ -97,7 +95,6 @@ class m170428_223742_test_migration extends Migration
                 'dval'  => $this->text()->notNull()->defaultValue(''),
                 'sval'  => $this->text()->notNull(),
                 'nval'  => $this->text()->defaultValue(null),
-                'zval'  => $this->text()->null()->defaultValue('dummy'),
             ]
         );
         $this->addForeignKey('someIdx', 'migrik_testfk', 'extId', 'migrik_test3', 'id');
@@ -110,6 +107,7 @@ class m170428_223742_test_migration extends Migration
             ]
         );
         $this->addPrimaryKey('otherPk', 'migrik_testcomposite', ['id', 'otherId']);
+        
         if ($this->getDb()->driverName === 'pgsql') {
             $this->createTable(
                 'migrik_pgspec',
@@ -117,7 +115,21 @@ class m170428_223742_test_migration extends Migration
                     'id'        => $this->char(30)->unique()->notNull(),
                     'arrField'  => 'int[]',
                     'jsonField' => 'JSON',
+                    'datetimeField'  => $this->dateTime(0)->defaultExpression('NOW()'),
+                    'binaryField'    => $this->binary()->defaultValue('DummyVal'),
+                    'zval'  => $this->text(500)->null()->defaultValue('dummy'),
                 ]
+            );
+        }
+        if ($this->getDb()->driverName === 'mysql') {
+            $this->createTable(
+                'migrik_myspec',
+                [
+                    'id'        => $this->char(30)->unique()->notNull(),
+                    'enum'  => "ENUM('uno','dos','tres') DEFAULT  'dos'",
+                    'set' => "SET('one','two','three') DEFAULT  'two'",
+                    'timeStampField'  => $this->timestamp(0)->defaultExpression('CURRENT_TIMESTAMP'),
+                ],'ENGINE=INNODB;'
             );
         }
     }
@@ -126,6 +138,8 @@ class m170428_223742_test_migration extends Migration
     {
         if ($this->getDb()->driverName === 'pgsql') {
             $this->dropTable('migrik_pgspec');
+        }elseif($this->getDb()->driverName === 'mysql'){
+            $this->dropTable('migrik_myspec');
         }
         $this->dropPrimaryKey('otherPk', 'migrik_testcomposite');
         $this->dropTable('migrik_testcomposite');
