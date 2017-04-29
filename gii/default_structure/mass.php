@@ -30,28 +30,33 @@ class <?= $migrationName ?> extends Migration
     {
         $tableOptions = '<?=$generator->tableOptions?>';
 <?php foreach ($tableList as $tableData) :?>
-             $this->createTable('<?= ($generator->usePrefix)?$tableData['alias']:$tableData['name'] ?>',[
+
+        $this->createTable('<?= ($generator->usePrefix)?$tableData['alias']:$tableData['name'] ?>',[
 <?php foreach ($tableData['columns'] as $name => $data) :?>
-               '<?=$name?>'=> <?=$data;?>,
+            '<?=$name?>'=> <?=$data;?>,
 <?php endforeach;?>
-            ], $tableOptions);
+        ], $tableOptions);
+
 <?php if (!empty($tableData['indexes']) && is_array($tableData['indexes'])) :?>
 <?php foreach ($tableData['indexes'] as $name => $data) :?>
 <?php if ($name!='PRIMARY') :?>
-            $this->createIndex('<?=$name?>','<?=$tableData['alias']?>',['<?=implode("','", array_values($data['cols']))
-				?>'],<?=$data['isuniq']?'true':'false'?>);
+        $this->createIndex('<?=$name?>','<?=$tableData['alias']?>',['<?=implode("','", array_values($data['cols']))?>'],<?=$data['isuniq']?'true':'false'?>);
 <?php endif;?>
 <?php endforeach;?>
 <?php endif?>
-    <?php if (!empty($tableData['tablePk'])) : ?>
-		$this->addPrimaryKey('pk_on_<?=$tableData['name']?>','<?=$tableData['alias']?>',
-		['<?=implode("','",$tableData['tablePk'])?>']);
-    <?php endif?>
+<?php if (!empty($tableData['tablePk'])) : ?>
+        $this->addPrimaryKey('pk_on_<?=$tableData['name']?>','<?=$tableData['alias']?>',['<?=implode("','",$tableData['tablePk'])?>']);
+<?php endif?>
 <?php endforeach;?>
 <?php if (!empty($tableRelations) && is_array($tableRelations)) :?>
 <?php foreach ($tableRelations as $table) :?>
 <?php foreach ($table['fKeys'] as $i => $rel) :?>
-            $this->addForeignKey('fk_<?=$table['tableName']?>_<?=$rel['pk']?>','<?=$table['tableAlias']?>','<?=$rel['pk']?>','<?=$rel['ftable']?>','<?=$rel['fk']?>','<?=$fkProps['onDelete']?>','<?=$fkProps['onUpdate']?>');
+        $this->addForeignKey(
+            'fk_<?=$table['tableName']?>_<?=$rel['pk']?>',
+            '<?=$table['tableAlias']?>', '<?=$rel['pk']?>',
+            '<?=$rel['ftable']?>', '<?=$rel['fk']?>',
+            '<?=$fkProps['onDelete']?>', '<?=$fkProps['onUpdate']?>'
+        );
 <?php endforeach;?>
 <?php endforeach;?>
 <?php endif?>
@@ -59,7 +64,6 @@ class <?= $migrationName ?> extends Migration
 
     public function safeDown()
     {
-
 <?php if (!empty($tableRelations) && is_array($tableRelations)) :?>
 <?php foreach ($tableRelations as $table) :?>
 <?php foreach ($table['fKeys'] as $i => $rel) :?>
@@ -69,10 +73,9 @@ class <?= $migrationName ?> extends Migration
 <?php endif?>
 <?php foreach ($tableList as $tableData) :?>
     <?php if (!empty($tableData['tablePk'])) : ?>
-		$this->dropPrimaryKey('pk_on_<?=$tableData['name']?>','<?=$tableData['alias']?>');
+        $this->dropPrimaryKey('pk_on_<?=$tableData['name']?>','<?=$tableData['alias']?>');
     <?php endif?>
-            $this->dropTable('<?= ($generator->usePrefix)?$tableData['alias']:$tableData['name']?>');
+        $this->dropTable('<?= ($generator->usePrefix)?$tableData['alias']:$tableData['name']?>');
 <?php endforeach;?>
-
     }
 }

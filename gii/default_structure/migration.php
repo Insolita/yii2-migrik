@@ -47,7 +47,7 @@ class <?= $migrationName ?> extends Migration
 <?php endforeach;?>
 <?php endif?>
 <?php if (!empty($tablePk)) : ?>
-		$this->addPrimaryKey('pk_on_<?=$tableName?>','<?=$tableAlias?>',['<?=implode("','", $tablePk)?>']);
+        $this->addPrimaryKey('pk_on_<?=$tableName?>','<?=$tableAlias?>',['<?=implode("','", $tablePk)?>']);
 <?php endif?>
 
     }
@@ -55,7 +55,7 @@ class <?= $migrationName ?> extends Migration
     public function safeDown()
     {
 <?php if (!empty($tablePk)) : ?>
-	$this->dropPrimaryKey('pk_on_<?=$tableName?>','<?=$tableAlias?>');
+    $this->dropPrimaryKey('pk_on_<?=$tableName?>','<?=$tableAlias?>');
 <?php endif?>
 <?php if (!empty($tableIndexes) && is_array($tableIndexes)) : ?>
 <?php foreach ($tableIndexes as $name => $data) :?>
