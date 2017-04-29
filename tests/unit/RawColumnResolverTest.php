@@ -319,7 +319,17 @@ class RawColumnResolverTest extends Unit
                 ),
                 'expect' => 'Schema::TYPE_INTEGER' . '."(6) UNSIGNED NOT NULL DEFAULT 0"'
             ],
-
+            [
+                'col' => new ColumnSchema(
+                    [
+                        'type' => Schema::TYPE_BIGINT,
+                        'size' =>15,
+                        'defaultValue' => 0,
+                        'dbType' => 'float'
+                    ]
+                ),
+                'expect' => 'Schema::TYPE_BIGINT' . '."(15) NOT NULL DEFAULT 0"'
+            ],
 
         ];
 

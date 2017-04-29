@@ -6,6 +6,7 @@
 namespace insolita\migrik\tests\unit;
 
 use Codeception\Specify;
+use Codeception\Util\Debug;
 use Codeception\Verify;
 use insolita\migrik\resolver\TableResolver;
 use yii\db\Schema;
@@ -41,13 +42,19 @@ class TableResolverTest extends Unit
         $resolver = new TableResolver(\Yii::$app->getDb());
         $schema = $resolver->schema;
         verify($schema)->isInstanceOf(Schema::class);
-        verify($schema)->isInstanceOf(\yii\db\pgsql\Schema::class);
+        if(\Yii::$app->getDb()->driverName ==='pgsql'){
+            verify($schema)->isInstanceOf(\yii\db\pgsql\Schema::class);
+        }
+        if(\Yii::$app->getDb()->driverName ==='mysql'){
+            verify($schema)->isInstanceOf(\yii\db\mysql\Schema::class);
+        }
+        Debug::debug($schema->tableNames);
     }
 
     public function testGetTableSchema()
     {
         $resolver = new TableResolver(\Yii::$app->getDb());
-        $tableSchema = $resolver->getTableSchema('itt_migration');
+        $tableSchema = $resolver->getTableSchema('migrik_test1');
         verify_that($tableSchema);
         verify($tableSchema)->isInstanceOf(TableSchema::class);
     }
@@ -57,8 +64,8 @@ class TableResolverTest extends Unit
         $resolver = new TableResolver(\Yii::$app->getDb());
         $tableNames = $resolver->getTableNames();
         verify($tableNames)->notEmpty();
-        verify($tableNames)->contains('itt_migration');
-        verify($tableNames)->contains('itt_auth_item');
+        verify($tableNames)->contains('migrik_test1');
+        verify($tableNames)->contains('migrik_test2');
     }
 
     public function testFindTablesByPattern()
@@ -67,9 +74,9 @@ class TableResolverTest extends Unit
         $this->specify(
             'by table name',
             function () use ($resolver) {
-                $founds = $resolver->findTablesByPattern('itt_migration');
+                $founds = $resolver->findTablesByPattern('migrik_testcomposite');
                 verify($founds)->notEmpty();
-                verify($founds)->contains('itt_migration');
+                verify($founds)->contains('migrik_testcomposite');
                 verify(count($founds))->equals(1);
             }
         );
@@ -77,9 +84,9 @@ class TableResolverTest extends Unit
         $this->specify(
             'by pattern one result',
             function () use ($resolver) {
-                $founds = $resolver->findTablesByPattern('itt_migrat*');
+                $founds = $resolver->findTablesByPattern('migrik_testcompos*');
                 verify($founds)->notEmpty();
-                verify($founds)->contains('itt_migration');
+                verify($founds)->contains('migrik_testcomposite');
                 verify(count($founds))->equals(1);
             }
         );
@@ -87,10 +94,11 @@ class TableResolverTest extends Unit
         $this->specify(
             'by pattern bulk result',
             function () use ($resolver) {
-                $founds = $resolver->findTablesByPattern('itt_auth*');
+                $founds = $resolver->findTablesByPattern('migrik_test*');
                 verify($founds)->notEmpty();
-                verify($founds)->contains('itt_auth_rule');
-                verify(count($founds))->equals(4);
+                verify($founds)->contains('migrik_testcomposite');
+                verify($founds)->contains('migrik_testfk');
+                verify(count($founds))->greaterOrEquals(5);
             }
         );
     }
@@ -101,7 +109,7 @@ class TableResolverTest extends Unit
         $this->specify(
             'by no relationed table',
             function () use ($resolver) {
-                $founds = $resolver->getRelations('itt_migration');
+                $founds = $resolver->getRelations('migrik_testunexisted');
                 verify($founds)->isEmpty();
             }
         );
@@ -109,10 +117,10 @@ class TableResolverTest extends Unit
         $this->specify(
             'by  relationed table',
             function () use ($resolver) {
-                $founds = $resolver->getRelations('itt_auth_item');
+                $founds = $resolver->getRelations('migrik_testfk');
                 verify($founds)->notEmpty();
                 verify(count($founds))->equals(1);
-                verify($founds[0])->equals(['ftable' => 'itt_auth_rule', 'pk' => 'rule_name', 'fk' => 'name']);
+                verify($founds['someIdx'])->equals(['ftable' => 'migrik_test3', 'pk' => 'extId', 'fk' => 'id']);
             }
         );
     }
@@ -123,7 +131,7 @@ class TableResolverTest extends Unit
         $this->specify(
             'one',
             function () use ($resolver) {
-                $founds = $resolver->getIndexes('itt_migration');
+                $founds = $resolver->getIndexes('migrik_test3');
                 verify(count($founds))->equals(0);
             }
         );
@@ -131,7 +139,7 @@ class TableResolverTest extends Unit
         $this->specify(
             'two',
             function () use ($resolver) {
-                $founds = $resolver->getIndexes('itt_auth_item');
+                $founds = $resolver->getIndexes('migrik_test2');
                 verify(count($founds))->equals(1);
             }
         );

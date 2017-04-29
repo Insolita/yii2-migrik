@@ -202,6 +202,17 @@ class FluentColumnResolverTest extends Unit
                 ),
                 'expect' => '$this->smallInteger(3)->unsigned()->notNull()->defaultValue(15)'
             ],
+            [
+                'col' => new ColumnSchema(
+                    [
+                        'type' => Schema::TYPE_BIGINT,
+                        'size' => 15,
+                        'defaultValue' => 15,
+                        'unsigned' => true
+                    ]
+                ),
+                'expect' => '$this->bigInteger(15)->unsigned()->notNull()->defaultValue(15)'
+            ],
         ];
 
         foreach ($test as $testItem) {
