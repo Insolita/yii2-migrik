@@ -116,6 +116,9 @@ class FluentColumnResolver extends BaseColumnResolver
         if ($type == Schema::TYPE_SMALLINT) {
             $type = 'smallInteger';
         }
+        if ($type == Schema::TYPE_BIGINT) {
+            $type = 'bigInteger';
+        }
         $size = $column->size ? '(' . $column->size . ')' : '()';
         $default = $this->buildDefaultValue($column);
         $nullable = $column->allowNull === true ? 'null()' : 'notNull()';
