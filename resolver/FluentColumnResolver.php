@@ -27,7 +27,7 @@ class FluentColumnResolver extends BaseColumnResolver
         list($type, $size, $default, $nullable, $comment) = $this->resolveCommon($column);
         return $this->buildString([$type . $size, $nullable, $default, $comment]);
     }
-
+    
     /**
      * @param \yii\db\ColumnSchema $column
      *
@@ -38,8 +38,8 @@ class FluentColumnResolver extends BaseColumnResolver
         $pk = $this->tableSchema->primaryKey;
         /**
          * fix #35 Skip pk definition build, if $pk is composite
-        **/
-        if (count($pk)===1 && in_array($column->name, $pk)) {
+         **/
+        if (count($pk) === 1 && in_array($column->name, $pk)) {
             $column->type = ($column->type == Schema::TYPE_BIGINT ? 'bigPrimaryKey' : 'primaryKey');
             return $this->resolvePk($column);
         }
@@ -52,7 +52,7 @@ class FluentColumnResolver extends BaseColumnResolver
         $unsigned = $column->unsigned ? 'unsigned()' : '';
         return $this->buildString([$type . $size, $unsigned, $nullable, $default, $comment]);
     }
-
+    
     /**
      * @param \yii\db\ColumnSchema $column
      *
@@ -71,7 +71,7 @@ class FluentColumnResolver extends BaseColumnResolver
             ? 'unsigned()' : '';
         return $this->buildString([$type . $size, $unsigned, $comment]);
     }
-   
+    
     /**
      * @param \yii\db\ColumnSchema $column
      *
@@ -93,7 +93,7 @@ class FluentColumnResolver extends BaseColumnResolver
         }
         return $this->buildString([$type . $size, $nullable, $default, $comment]);
     }
-
+    
     /**
      * @param \yii\db\ColumnSchema $column
      *
@@ -107,7 +107,7 @@ class FluentColumnResolver extends BaseColumnResolver
         }
         return $this->buildString([$type . $size, $nullable, $default, $comment]);
     }
-
+    
     /**
      * @param \yii\db\ColumnSchema $column
      *
@@ -116,23 +116,23 @@ class FluentColumnResolver extends BaseColumnResolver
     protected function resolveCommon(ColumnSchema $column)
     {
         $type = $column->type;
-        if ($type == Schema::TYPE_TINYINT) {
-            $type = 'tinyInteger';
-        }
-        if ($type == Schema::TYPE_SMALLINT) {
-            $type = 'smallInteger';
-        }
-        if ($type == Schema::TYPE_BIGINT) {
-            $type = 'bigInteger';
+        $intMap = [
+            Schema::TYPE_TINYINT => 'tinyInteger',
+            Schema::TYPE_SMALLINT => 'smallInteger',
+            Schema::TYPE_BIGINT => 'bigInteger',
+        ];
+        if (isset($intMap[$type])) {
+            $type = $intMap[$type];
         }
         $size = $column->size ? '(' . $column->size . ')' : '()';
         $default = $this->buildDefaultValue($column);
         $nullable = $column->allowNull === true ? 'null()' : 'notNull()';
-
+        
         $comment = $column->comment ? ("comment(" . $this->schema->quoteValue($column->comment) . ")") : '';
-
+        
         return [$type, $size, $default, $nullable, $comment];
     }
+    
     /**
      * @param \yii\db\ColumnSchema $column
      *
@@ -151,6 +151,7 @@ class FluentColumnResolver extends BaseColumnResolver
         $columns = implode(' ', array_filter(array_map('trim', [$nullable, $default, $comment]), 'trim'));
         return '"' . $enum . ' ' . $columns . '"';
     }
+    
     /**
      * @param \yii\db\ColumnSchema $column
      *
@@ -165,6 +166,7 @@ class FluentColumnResolver extends BaseColumnResolver
         $columns = implode(' ', array_filter(array_map('trim', [$nullable, $default, $comment]), 'trim'));
         return '"' . $set . ' ' . $columns . '"';
     }
+    
     /**
      * Builds the default value specification for the column.
      *
@@ -177,7 +179,7 @@ class FluentColumnResolver extends BaseColumnResolver
         if ($column->defaultValue === null) {
             return $column->allowNull === true ? 'defaultValue(null)' : '';
         }
-
+        
         switch (gettype($column->defaultValue)) {
             case 'integer':
                 $string = 'defaultValue(' . $column->defaultValue . ')';
@@ -195,10 +197,10 @@ class FluentColumnResolver extends BaseColumnResolver
             default:
                 $string = "defaultValue('{$column->defaultValue}')";
         }
-
+        
         return $string;
     }
-
+    
     /**
      * @param array $columnParts
      *
@@ -206,7 +208,9 @@ class FluentColumnResolver extends BaseColumnResolver
      **/
     protected function buildString(array $columnParts)
     {
-        $columnParts = array_filter($columnParts, function($v){return $v!=='!skip';});
+        $columnParts = array_filter($columnParts, function ($v) {
+            return $v !== '!skip';
+        });
         array_unshift($columnParts, '$this');
         return implode('->', array_filter(array_map('trim', $columnParts), 'trim'));
     }

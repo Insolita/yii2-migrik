@@ -116,14 +116,13 @@ class PgFluentColumnResolver extends BaseColumnResolver
     protected function resolveCommon(ColumnSchema $column)
     {
         $type = $column->type;
-        if ($type == Schema::TYPE_TINYINT) {
-            $type = 'tinyInteger';
-        }
-        if ($type == Schema::TYPE_SMALLINT) {
-            $type = 'smallInteger';
-        }
-        if ($type == Schema::TYPE_BIGINT) {
-            $type = 'bigInteger';
+        $intMap = [
+            Schema::TYPE_TINYINT => 'tinyInteger',
+            Schema::TYPE_SMALLINT => 'smallInteger',
+            Schema::TYPE_BIGINT => 'bigInteger',
+        ];
+        if (isset($intMap[$type])) {
+            $type = $intMap[$type];
         }
         $size = $column->size ? '(' . $column->size . ')' : '()';
         if ($column->allowNull === true && $column->defaultValue === null) {
