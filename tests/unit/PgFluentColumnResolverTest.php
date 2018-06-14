@@ -31,6 +31,7 @@ class PgFluentColumnResolverTest extends Unit
             'strField'       => '$this->string(255)',
             'textField'      => '$this->text()',
             'smallintField'  => '$this->smallInteger(16)',
+            'tinyintField'  => '$this->tinyInteger(2)',
             'intField'       => '$this->integer(32)',
             'bigintField'    => '$this->bigInteger(64)',
             'floatField'     => '$this->double(53)',

@@ -190,6 +190,17 @@ class FluentColumnResolverTest extends Unit
             [
                 'col'    => new ColumnSchema(
                     [
+                        'type'         => Schema::TYPE_TINYINT,
+                        'size'         => 2,
+                        'defaultValue' => 15,
+                        'unsigned'     => true,
+                    ]
+                ),
+                'expect' => '$this->tinyInteger(3)->unsigned()->notNull()->defaultValue(15)',
+            ],
+            [
+                'col'    => new ColumnSchema(
+                    [
                         'type'         => Schema::TYPE_BIGINT,
                         'size'         => 15,
                         'defaultValue' => 15,
@@ -288,6 +299,7 @@ class FluentColumnResolverTest extends Unit
             'strField'       => '$this->string(255)->null()->defaultValue(null)',
             'textField'      => '$this->text()->null()->defaultValue(null)',
             'smallintField'  => '$this->smallInteger(6)->null()->defaultValue(null)',
+            'tinyintField'  => '$this->tinyInteger(2)->null()->defaultValue(null)',
             'intField'       => '$this->integer(11)->null()->defaultValue(null)',
             'bigintField'    => '$this->bigInteger(20)->null()->defaultValue(null)',
             'floatField'     => '$this->float()->null()->defaultValue(null)',

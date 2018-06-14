@@ -116,6 +116,9 @@ class PgFluentColumnResolver extends BaseColumnResolver
     protected function resolveCommon(ColumnSchema $column)
     {
         $type = $column->type;
+        if ($type == Schema::TYPE_TINYINT) {
+            $type = 'tinyInteger';
+        }
         if ($type == Schema::TYPE_SMALLINT) {
             $type = 'smallInteger';
         }

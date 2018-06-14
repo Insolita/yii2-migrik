@@ -15,6 +15,7 @@ class m170428_223742_test_migration extends Migration
                 'strField'       => $this->string(),
                 'textField'      => $this->text(),
                 'smallintField'  => $this->smallInteger()->unique(),
+                'tinyintField'  => $this->tinyInteger(2)->unique(),
                 'intField'       => $this->integer(),
                 'bigintField'    => $this->bigInteger(),
                 'floatField'     => $this->float(2),
@@ -27,6 +28,7 @@ class m170428_223742_test_migration extends Migration
                 'binaryField'    => $this->binary(),
                 'boolField'      => $this->boolean(),
                 'moneyField'     => $this->money(5, 1),
+                'jsonField'      => $this->json()
             ]
         );
         $this->createIndex(
