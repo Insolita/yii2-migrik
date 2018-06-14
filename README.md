@@ -13,22 +13,19 @@ Migration Generator
 
 ### Installation
 
+**NOTE** : Use 2.x versions for yii <=2.0.13
+
 The preferred way to install this extension is through [composer](http://getcomposer.org/download/).
 
 Either run
-
 ```
-php composer.phar require -dev --prefer-dist insolita/yii2-migration-generator:~2.3
-```
-or 
-```
-composer require -dev --prefer-dist insolita/yii2-migration-generator:~2.3
+composer require -dev --prefer-dist insolita/yii2-migration-generator:~3.0
 ```
 
 or add
 
 ```
-"insolita/yii2-migration-generator": "~2.3"
+"insolita/yii2-migration-generator": "~3.0"
 ```
 
 to the require-dev section of your `composer.json` file.
