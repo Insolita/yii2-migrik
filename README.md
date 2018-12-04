@@ -19,7 +19,7 @@ The preferred way to install this extension is through [composer](http://getcomp
 
 Either run
 ```
-composer require -dev --prefer-dist insolita/yii2-migration-generator:~3.0
+composer require --dev --prefer-dist insolita/yii2-migration-generator:~3.0
 ```
 
 or add
@@ -50,7 +50,7 @@ __Supported column annotations:__
  - As separate annotation above class  or above current variable
  
  ```php 
- /**
+/**
  * @column (name) string|notNull|default('SomeValue')
  */
  ```
@@ -59,11 +59,11 @@ __Supported column annotations:__
  ```
     /**
      * @var int $id @column pk()
-    **/
+     */
     public $id;
     /**
      * @var string $route @column string(100)|notNull()
-    **/
+     */
     public $route;
  
  ```
@@ -75,7 +75,7 @@ __Supported column annotations:__
  * @property string     $email      @column string(200)|unique()|defaultValue("123@mail.ru")
  * @property string     $password   @column string(200)|notNull|expr(null)
  * @property string     $created_at @column string(200)|notNull|expr('CURRENT_TIMESTAMP')
-**/
+ */
 class TestModel extends ActiveRecord{
 ```
 
@@ -92,25 +92,23 @@ to some project directory, for example
 Change gii configuration like this
 ```php
 $config['modules']['gii'] = [
-        'class' => 'yii\gii\Module',
-        'allowedIPs' => ['127.0.0.1', 'localhost', '::1'],
-        'generators' => [
-            'migrik'=>[
-                        'class'=>\insolita\migrik\gii\StructureGenerator::class,
-                        'templates'=>
-                        [
-                             'custom'=>'@backend/gii/templates/migrator_schema'
-                        ]
-            ],
-            'migrikdata'=>[
-                        'class'=>\insolita\migrik\gii\DataGenerator::class,
-                        'templates'=>
-                        [        
-                            'custom'=>'@backend/gii/templates/migrator_data'
-                        ]
-            ],
-        ]
-]
+    'class' => 'yii\gii\Module',
+    'allowedIPs' => ['127.0.0.1', 'localhost', '::1'],
+    'generators' => [
+        'migrik' => [
+            'class' => \insolita\migrik\gii\StructureGenerator::class,
+            'templates' => [
+                    'custom' => '@backend/gii/templates/migrator_schema',
+                ],
+        ],
+        'migrikdata' => [
+            'class' => \insolita\migrik\gii\DataGenerator::class,
+            'templates' => [
+                    'custom' => '@backend/gii/templates/migrator_data',
+                ],
+        ],
+    ],
+];
 ```
 
 ##### Use own resolver for definition of columns 
