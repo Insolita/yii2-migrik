@@ -98,14 +98,14 @@ $config['modules']['gii'] = [
         'migrik' => [
             'class' => \insolita\migrik\gii\StructureGenerator::class,
             'templates' => [
-                    'custom' => '@backend/gii/templates/migrator_schema',
-                ],
+                'custom' => '@backend/gii/templates/migrator_schema',
+            ],
         ],
         'migrikdata' => [
             'class' => \insolita\migrik\gii\DataGenerator::class,
             'templates' => [
-                    'custom' => '@backend/gii/templates/migrator_data',
-                ],
+                'custom' => '@backend/gii/templates/migrator_data',
+            ],
         ],
     ],
 ];
