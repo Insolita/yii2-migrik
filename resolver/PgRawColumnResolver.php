@@ -76,6 +76,9 @@ class PgRawColumnResolver extends BaseColumnResolver
             case 'object':
                 $string .= (string) $column->defaultValue;
                 break;
+            case 'array':
+                $string .= (string) json_encode($column->defaultValue);
+                break;
             default:
                 if (mb_stripos($column->defaultValue, 'NULL::') !== false) {
                     $string = '';

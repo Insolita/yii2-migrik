@@ -86,6 +86,9 @@ class PgFluentColumnResolver extends BaseColumnResolver
             case 'object':
                 $string = 'defaultExpression("'.(string) $column->defaultValue.'")';
                 break;
+            case 'array':
+                $string = (string) 'defaultValue('.json_encode($column->defaultValue).')';
+                break;
             default:
                 {
                     if (mb_stripos($column->defaultValue, 'NULL::') !== false) {
