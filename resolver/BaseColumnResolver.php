@@ -83,9 +83,7 @@ abstract class BaseColumnResolver implements IMigrationColumnResolver
         if (StringHelper::startsWith($column->dbType, '_')) {
             $columnTypeMethod = 'resolveArrayType';
         }
-        if ($column->dbType === 'jsonb') {
-            $columnTypeMethod = 'resolveJsonType';
-        }
+
         if (method_exists($this, $columnTypeMethod)) {
             \Yii::trace('try to call customMethod "'.$columnTypeMethod.'"', __METHOD__);
 

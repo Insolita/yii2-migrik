@@ -25,89 +25,10 @@ class PgFluentColumnResolver extends BaseColumnResolver
     protected function resolveString(ColumnSchema $column)
     {
         list($type, $size, $default, $nullable, $comment) = $this->resolveCommon($column);
-        return $this->buildString([$type . $size, $nullable, $default, $comment]);
+
+        return $this->buildString([$type.$size, $nullable, $default, $comment]);
     }
-    
-    /**
-     * @param \yii\db\ColumnSchema $column
-     *
-     * @return string
-     */
-    protected function resolveNumeric(ColumnSchema $column)
-    {
-        $pk = $this->tableSchema->primaryKey;
-        /**
-         * fix #35 Skip pk definition build, if $pk is composite
-         **/
-        if (count($pk) === 1 && in_array($column->name, $pk)) {
-            $column->type = ($column->type == Schema::TYPE_BIGINT ? 'bigPrimaryKey' : 'primaryKey');
-            return $this->resolvePk($column);
-        }
-        list($type, $size, $default, $nullable, $comment) = $this->resolveCommon($column);
-        if ($column->scale && $column->precision) {
-            $size = '(' . $column->precision . ', ' . $column->scale . ')';
-        } elseif ($column->precision) {
-            $size = '(' . $column->precision . ')';
-        }
-        $unsigned = $column->unsigned ? 'unsigned()' : '';
-        return $this->buildString([$type . $size, $unsigned, $nullable, $default, $comment]);
-    }
-    
-    /**
-     * @param \yii\db\ColumnSchema $column
-     *
-     * @return string
-     */
-    protected function resolvePk(ColumnSchema $column)
-    {
-        list($type, $size, , , $comment) = $this->resolveCommon($column);
-        if (in_array($column->type, [Schema::TYPE_BIGPK, Schema::TYPE_UBIGPK])) {
-            $type = 'bigPrimaryKey';
-        }
-        if (in_array($column->type, [Schema::TYPE_PK, Schema::TYPE_UPK])) {
-            $type = 'primaryKey';
-        }
-        $unsigned = ($column->unsigned || in_array($column->type, [Schema::TYPE_UBIGPK, Schema::TYPE_UPK]))
-            ? 'unsigned()' : '';
-        return $this->buildString([$type . $size, $unsigned, $comment]);
-    }
-    
-    /**
-     * @param \yii\db\ColumnSchema $column
-     *
-     * @return string
-     */
-    protected function resolveTime(ColumnSchema $column)
-    {
-        list($type, $size, $default, $nullable, $comment) = $this->resolveCommon($column);
-        if (!is_null($column->precision)) {
-            $size = '(' . $column->precision . ')';
-        }
-        if ($column->defaultValue
-            && (StringHelper::startsWith($column->defaultValue, "CURRENT") or StringHelper::startsWith(
-                    $column->defaultValue,
-                    "LOCAL"
-                ))
-        ) {
-            $default = 'defaultExpression("' . $column->defaultValue . '")';
-        }
-        return $this->buildString([$type . $size, $nullable, $default, $comment]);
-    }
-    
-    /**
-     * @param \yii\db\ColumnSchema $column
-     *
-     * @return string
-     */
-    protected function resolveOther(ColumnSchema $column)
-    {
-        list($type, $size, $default, $nullable, $comment) = $this->resolveCommon($column);
-        if ($column->precision) {
-            $size = '(' . $column->precision . ')';
-        }
-        return $this->buildString([$type . $size, $nullable, $default, $comment]);
-    }
-    
+
     /**
      * @param \yii\db\ColumnSchema $column
      *
@@ -124,7 +45,7 @@ class PgFluentColumnResolver extends BaseColumnResolver
         if (isset($intMap[$type])) {
             $type = $intMap[$type];
         }
-        $size = $column->size ? '(' . $column->size . ')' : '()';
+        $size = $column->size ? '('.$column->size.')' : '()';
         if ($column->allowNull === true && $column->defaultValue === null) {
             $nullable = '!skip';
             $default = '!skip';
@@ -132,12 +53,12 @@ class PgFluentColumnResolver extends BaseColumnResolver
             $default = $this->buildDefaultValue($column);
             $nullable = $column->allowNull === true ? 'null()' : 'notNull()';
         }
-        
-        $comment = $column->comment ? ("comment(" . $this->schema->quoteValue($column->comment) . ")") : '';
-        
+
+        $comment = $column->comment ? ("comment(".$this->schema->quoteValue($column->comment).")") : '';
+
         return [$type, $size, $default, $nullable, $comment];
     }
-    
+
     /**
      * Builds the default value specification for the column.
      *
@@ -150,35 +71,134 @@ class PgFluentColumnResolver extends BaseColumnResolver
         if ($column->defaultValue === null) {
             return $column->allowNull === true ? 'defaultValue(null)' : '!skip';
         }
-        
+
         switch (gettype($column->defaultValue)) {
             case 'integer':
-                $string = 'defaultValue(' . $column->defaultValue . ')';
+                $string = 'defaultValue('.$column->defaultValue.')';
                 break;
             case 'double':
                 // ensure type cast always has . as decimal separator in all locales
-                $string = 'defaultValue("' . str_replace(',', '.', (string)$column->defaultValue) . '")';
+                $string = 'defaultValue("'.str_replace(',', '.', (string) $column->defaultValue).'")';
                 break;
             case 'boolean':
                 $string = $column->defaultValue ? 'defaultValue(true)' : 'defaultValue(false)';
                 break;
             case 'object':
-                $string = 'defaultExpression("' . (string)$column->defaultValue . '")';
+                $string = 'defaultExpression("'.(string) $column->defaultValue.'")';
                 break;
-            default: {
-                if (mb_stripos($column->defaultValue, 'NULL::') !== false) {
-                    $string = '!skip';
-                } else {
-                    $string = "defaultValue('{$column->defaultValue}')";
+            default:
+                {
+                    if (mb_stripos($column->defaultValue, 'NULL::') !== false) {
+                        $string = '!skip';
+                    } else {
+                        $string = "defaultValue('{$column->defaultValue}')";
+                    }
                 }
-            }
         }
-        
+
         return $string;
     }
-    
+
+    /**
+     * @param array $columnParts
+     *
+     * @return string
+     **/
+    protected function buildString(array $columnParts)
+    {
+        $columnParts = array_filter($columnParts, function ($v) {
+            return $v !== '!skip';
+        });
+        array_unshift($columnParts, '$this');
+
+        return implode('->', array_filter(array_map('trim', $columnParts), 'trim'));
+    }
+
     /**
      * @param \yii\db\ColumnSchema $column
+     *
+     * @return string
+     */
+    protected function resolveNumeric(ColumnSchema $column)
+    {
+        $pk = $this->tableSchema->primaryKey;
+        /**
+         * fix #35 Skip pk definition build, if $pk is composite
+         **/
+        if (count($pk) === 1 && in_array($column->name, $pk)) {
+            $column->type = ($column->type == Schema::TYPE_BIGINT ? 'bigPrimaryKey' : 'primaryKey');
+
+            return $this->resolvePk($column);
+        }
+        list($type, $size, $default, $nullable, $comment) = $this->resolveCommon($column);
+        if ($column->scale && $column->precision) {
+            $size = '('.$column->precision.', '.$column->scale.')';
+        } elseif ($column->precision) {
+            $size = '('.$column->precision.')';
+        }
+        $unsigned = $column->unsigned ? 'unsigned()' : '';
+
+        return $this->buildString([$type.$size, $unsigned, $nullable, $default, $comment]);
+    }
+
+    /**
+     * @param \yii\db\ColumnSchema $column
+     *
+     * @return string
+     */
+    protected function resolvePk(ColumnSchema $column)
+    {
+        list($type, $size, , , $comment) = $this->resolveCommon($column);
+        if (in_array($column->type, [Schema::TYPE_BIGPK, Schema::TYPE_UBIGPK])) {
+            $type = 'bigPrimaryKey';
+        }
+        if (in_array($column->type, [Schema::TYPE_PK, Schema::TYPE_UPK])) {
+            $type = 'primaryKey';
+        }
+        $unsigned = ($column->unsigned || in_array($column->type, [
+                Schema::TYPE_UBIGPK,
+                Schema::TYPE_UPK,
+            ])) ? 'unsigned()' : '';
+
+        return $this->buildString([$type.$size, $unsigned, $comment]);
+    }
+
+    /**
+     * @param \yii\db\ColumnSchema $column
+     *
+     * @return string
+     */
+    protected function resolveTime(ColumnSchema $column)
+    {
+        list($type, $size, $default, $nullable, $comment) = $this->resolveCommon($column);
+        if (! is_null($column->precision)) {
+            $size = '('.$column->precision.')';
+        }
+        if ($column->defaultValue && (StringHelper::startsWith($column->defaultValue, 'CURRENT') or StringHelper::startsWith($column->defaultValue, 'LOCAL'))) {
+            $default = 'defaultExpression("'.$column->defaultValue.'")';
+        }
+
+        return $this->buildString([$type.$size, $nullable, $default, $comment]);
+    }
+
+    /**
+     * @param \yii\db\ColumnSchema $column
+     *
+     * @return string
+     */
+    protected function resolveOther(ColumnSchema $column)
+    {
+        list($type, $size, $default, $nullable, $comment) = $this->resolveCommon($column);
+        if ($column->precision) {
+            $size = '('.$column->precision.')';
+        }
+
+        return $this->buildString([$type.$size, $nullable, $default, $comment]);
+    }
+
+    /**
+     * @param \yii\db\ColumnSchema $column
+     * @return string
      */
     protected function resolveJsonType(ColumnSchema $column)
     {
@@ -188,17 +208,47 @@ class PgFluentColumnResolver extends BaseColumnResolver
             $nullable = '';
         } elseif ($column->defaultValue === null) {
             $default = $column->allowNull === true ? ' DEFAULT NULL' : '';
-        } else{
+        } elseif (is_array($column->defaultValue)) {
+            $default = 'DEFAULT "'.json_encode($column->defaultValue).'"';
+        } else {
             $default = "DEFAULT '{$column->defaultValue}'";
         }
-        $comment = $column->comment ? ("COMMENT " . $this->schema->quoteValue($column->comment)) : '';
+        $comment = $column->comment ? ('COMMENT '.$this->schema->quoteValue($column->comment)) : '';
+
         $default = preg_replace('~[\"]~', '\"', $default);
         $columns = implode(' ', array_filter([$nullable, $default, $comment], 'trim'));
-        return '"' . trim('json ' . $columns) . '"';
+
+        return '"'.trim('json '.$columns).'"';
     }
-    
+
     /**
      * @param \yii\db\ColumnSchema $column
+     * @return string
+     */
+    protected function resolveJsonbType(ColumnSchema $column)
+    {
+        $default = '';
+        $nullable = $column->allowNull ? '' : 'NOT NULL';
+        if ($column->allowNull === true && $column->defaultValue === null) {
+            $nullable = '';
+        } elseif ($column->defaultValue === null) {
+            $default = $column->allowNull === true ? ' DEFAULT NULL' : '';
+        } elseif (is_array($column->defaultValue)) {
+            $default = 'DEFAULT "'.json_encode($column->defaultValue).'"';
+        } else {
+            $default = "DEFAULT '{$column->defaultValue}'";
+        }
+        $comment = $column->comment ? ('COMMENT '.$this->schema->quoteValue($column->comment)) : '';
+
+        $default = preg_replace('~[\"]~', '\"', $default);
+        $columns = implode(' ', array_filter([$nullable, $default, $comment], 'trim'));
+
+        return '"'.trim('jsonb '.$columns).'"';
+    }
+
+    /**
+     * @param \yii\db\ColumnSchema $column
+     * @return string
      */
     protected function resolveArrayType(ColumnSchema $column)
     {
@@ -208,29 +258,13 @@ class PgFluentColumnResolver extends BaseColumnResolver
             $nullable = '';
         } elseif ($column->defaultValue === null) {
             $default = $column->allowNull === true ? ' DEFAULT NULL' : '';
-        } elseif(mb_stripos($column->defaultValue, 'array') !== false){
-            $default = "DEFAULT " . preg_replace('~[\"]~', "'", $column->defaultValue);
+        } elseif (mb_stripos($column->defaultValue, 'array') !== false) {
+            $default = 'DEFAULT '.preg_replace('~[\"]~', "'", $column->defaultValue);
         }
-        $comment = $column->comment ? ("COMMENT " . $this->schema->quoteValue($column->comment)) : '';
+        $comment = $column->comment ? ('COMMENT '.$this->schema->quoteValue($column->comment)) : '';
         $type = preg_replace('~([^A-Za-z])~', '', $column->dbType);
         $columns = implode(' ', array_filter([$nullable, $default, $comment], 'trim'));
-        return '"' . trim($type . '[] ' . $columns) . '"';
-    }
-    
-    /**
-     * @param array $columnParts
-     *
-     * @return string
-     **/
-    protected function buildString(array $columnParts)
-    {
-        $columnParts = array_filter(
-            $columnParts,
-            function ($v) {
-                return $v !== '!skip';
-            }
-        );
-        array_unshift($columnParts, '$this');
-        return implode('->', array_filter(array_map('trim', $columnParts), 'trim'));
+
+        return '"'.trim($type.'[] '.$columns).'"';
     }
 }
