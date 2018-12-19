@@ -30,16 +30,16 @@ abstract class BaseColumnResolver implements IMigrationColumnResolver
      * @var ColumnSchemaBuilder $builder
      **/
     protected $columnSchemaBuilder;
+
     /**
      * @var TableSchema $tableSchema
      **/
     protected $tableSchema;
 
-
     /**
      * BaseColumnResolver constructor.
      *
-     * @param \yii\db\Schema      $schema
+     * @param \yii\db\Schema $schema
      * @param \yii\db\TableSchema $tableSchema
      */
     public function __construct(Schema $schema, TableSchema $tableSchema)
@@ -55,6 +55,7 @@ abstract class BaseColumnResolver implements IMigrationColumnResolver
      * or "$this->string(255)->notNull()->defaultValue('example')->comment('bla-bla')"
      * Method offer ability to create string representation for each database-type method
      * create function named like 'resolve' . ucfirst($column->dbType) . 'Type'
+     *
      * @example
      *   resolveEnumType(ColumnSchema $column) or
      *   resolvePolygonType(ColumnSchema $column) or
@@ -69,26 +70,31 @@ abstract class BaseColumnResolver implements IMigrationColumnResolver
          * @var ColumnSchema $column
          **/
         $column = $this->getTableSchema()->getColumn($columnName);
-        if (!$column->comment) {
+        if (! $column->comment) {
             $column->comment = $this->defaultCommentsByColumnName($column->name);
         }
-        $columnTypeMethod = 'resolve' . ucfirst($column->dbType) . 'Type';
-        if(StringHelper::startsWith($column->dbType, 'enum(')){
+        $columnTypeMethod = 'resolve'.ucfirst($column->dbType).'Type';
+        if (StringHelper::startsWith($column->dbType, 'enum(')) {
             $columnTypeMethod = 'resolveEnumType';
         }
-        if(StringHelper::startsWith($column->dbType, 'set(')){
+        if (StringHelper::startsWith($column->dbType, 'set(')) {
             $columnTypeMethod = 'resolveSetType';
         }
-        if(StringHelper::startsWith($column->dbType, '_')){
+        if (StringHelper::startsWith($column->dbType, '_')) {
             $columnTypeMethod = 'resolveArrayType';
         }
+        if ($column->dbType === 'jsonb') {
+            $columnTypeMethod = 'resolveJsonType';
+        }
         if (method_exists($this, $columnTypeMethod)) {
-            \Yii::trace('try to call customMethod "' . $columnTypeMethod . '"', __METHOD__);
+            \Yii::trace('try to call customMethod "'.$columnTypeMethod.'"', __METHOD__);
+
             return call_user_func([$this, $columnTypeMethod], $column);
         } else {
             $columnCategory = ArrayHelper::getValue($this->getColumnSchemaBuilder()->categoryMap, $column->type);
-            \Yii::trace('try to call categoryMethod "resolve' . ucfirst($columnCategory) . '"', __METHOD__);
-            return call_user_func([$this, 'resolve' . ucfirst($columnCategory)], $column);
+            \Yii::trace('try to call categoryMethod "resolve'.ucfirst($columnCategory).'"', __METHOD__);
+
+            return call_user_func([$this, 'resolve'.ucfirst($columnCategory)], $column);
         }
     }
 
@@ -110,6 +116,7 @@ abstract class BaseColumnResolver implements IMigrationColumnResolver
     protected function defaultCommentsByColumnName($name)
     {
         $defaults = [];
+
         return ArrayHelper::getValue($defaults, $name, '');
     }
 
@@ -123,6 +130,7 @@ abstract class BaseColumnResolver implements IMigrationColumnResolver
 
     /**
      * Resolve string-category columns
+     *
      * @see ColumnSchemaBuilder->$categoryMap
      * @param \yii\db\ColumnSchema $column
      *
@@ -132,6 +140,7 @@ abstract class BaseColumnResolver implements IMigrationColumnResolver
 
     /**
      * Resolve Numeric-category columns
+     *
      * @see ColumnSchemaBuilder->$categoryMap
      * @param \yii\db\ColumnSchema $column
      *
@@ -141,6 +150,7 @@ abstract class BaseColumnResolver implements IMigrationColumnResolver
 
     /**
      * Resolve time-category columns
+     *
      * @see ColumnSchemaBuilder->$categoryMap
      * @param \yii\db\ColumnSchema $column
      *
@@ -150,6 +160,7 @@ abstract class BaseColumnResolver implements IMigrationColumnResolver
 
     /**
      * Resolve pk-category columns
+     *
      * @see ColumnSchemaBuilder->$categoryMap
      * @param \yii\db\ColumnSchema $column
      *
@@ -159,12 +170,11 @@ abstract class BaseColumnResolver implements IMigrationColumnResolver
 
     /**
      * Resolve other-category columns
+     *
      * @see ColumnSchemaBuilder->$categoryMap
      * @param \yii\db\ColumnSchema $column
      *
      * @return string
      */
     abstract protected function resolveOther(ColumnSchema $column);
-
-
 }

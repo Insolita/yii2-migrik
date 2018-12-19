@@ -68,6 +68,7 @@ class PgFluentColumnResolverTest extends Unit
             'datetimeField'=> '$this->timestamp()->null()->defaultExpression("now()")',
             'binaryField'=> '$this->binary()->null()->defaultValue(\'\x44756d6d7956616c\')',
             'zval'=> '$this->text()->null()->defaultValue(\'dummy\')',
+            'jsonb'=>'"json"'
         ];
         foreach ($fixture as $field => $expected) {
             $resolved = $resolver->resolveColumn($field);
