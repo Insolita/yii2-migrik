@@ -1,5 +1,6 @@
 CHANGELOG
 =================================
+20.12.2018 - 3.0.1 improve postgres jsonb support; check on latest yii2 version
 15.08.2018 - 3.0 version release; For yii >=2.0.14; add tinyInteger column support
 29.04.2017 - 2.3 version release; Fix common bugs; seprate postgresql resolver for suppor arrays (one dimensional only) and json columns; fix view files;
 03.02.2017 - 2.2.9 version release
