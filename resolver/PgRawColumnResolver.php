@@ -146,7 +146,7 @@ class PgRawColumnResolver extends BaseColumnResolver
     {
         list($type, $size, $default, $nullable) = $this->resolveCommon($column);
         if (is_array($default)) {
-            $default = json_encode($default);
+            $default = "'".json_encode($default)."'";
         }
         $default = preg_replace('~[\"]~', '\"', $default);
         $columns = implode(' ', array_filter([$nullable, $default], 'trim'));
