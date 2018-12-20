@@ -19,13 +19,13 @@ The preferred way to install this extension is through [composer](http://getcomp
 
 Either run
 ```
-composer require --dev --prefer-dist insolita/yii2-migration-generator:~3.0
+composer require --dev --prefer-dist insolita/yii2-migration-generator:~3.1
 ```
 
 or add
 
 ```
-"insolita/yii2-migration-generator": "~3.0"
+"insolita/yii2-migration-generator": "~3.1"
 ```
 
 to the require-dev section of your `composer.json` file.
@@ -82,12 +82,19 @@ class TestModel extends ActiveRecord{
  
 ### Customizing 
 ##### Use Own templates
+
 Copy default templates from folders 
+
    `vendor/insolita/yii2-migration-generator/gii/default_structure //schema migrations`
+   
    `vendor/insolita/yii2-migration-generator/gii/default_data //data migrations`
+   
 to some project directory, for example 
+
    `@backend/gii/templates/migrator_data;`
+   
    `@backend/gii/templates/migrator_schema;`
+   
 
 Change gii configuration like this
 ```php
