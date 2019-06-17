@@ -241,7 +241,7 @@ class ByModelGenerator extends Generator
         $models = preg_split('/\s/siu', $this->models);
         $models = array_map(
             function ($v) {
-                return trim($v, '\t\n\r\0\xOB\,\\/');
+                return trim($v, "\t\n\r\0\xOB\,\\/");
             },
             $models
         );
