@@ -3,7 +3,7 @@
  * Created by solly [19.08.16 14:12]
  */
 
-namespace insolita\migrik\tests\data;
+namespace tests\data;
 
 /**
  * @db (db)

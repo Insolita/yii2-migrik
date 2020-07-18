@@ -19,13 +19,13 @@ The preferred way to install this extension is through [composer](http://getcomp
 
 Either run
 ```
-composer require --dev --prefer-dist insolita/yii2-migration-generator:~3.1
+composer require --dev --prefer-dist insolita/yii2-migration-generator:~4.0
 ```
 
 or add
 
 ```
-"insolita/yii2-migration-generator": "~3.1"
+"insolita/yii2-migration-generator": "~4.0"
 ```
 
 to the require-dev section of your `composer.json` file.
@@ -128,3 +128,8 @@ $config['modules']['gii'] = [
   
   ```\Yii::$container->set(IMigrationTableResolver::class, YourTableResolver::class);```
     
+###Testing
+
+- copy .env.dist to .env and define necessary php image version
+- run `make build && make up` for build and run docker images
+- run `make uptests`

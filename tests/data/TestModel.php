@@ -3,7 +3,7 @@
  * Created by solly [18.08.16 23:58]
  */
 
-namespace insolita\migrik\tests\data;
+namespace tests\data;
 
 use yii\db\ActiveRecord;
 

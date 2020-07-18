@@ -1,0 +1,74 @@
+version: "3.5"
+services:
+    php:
+        build:
+            dockerfile: tests/docker/Dockerfile
+            context: .
+            args:
+                - PHP_IMAGE_VERSION
+                - PHP_IMAGE_NAME
+        volumes:
+            - ./tests/runtime/.composer:/root/.composer:rw
+            - .:/app
+        environment:
+            TZ: ${TZ}
+            TIMEZONE: ${TZ}
+            COMPOSER_ALLOW_SUPERUSER: 1
+            DB_USER: ${DB_USER}
+            DB_PASSWORD: ${DB_PASSWORD}
+            MYSQL_DSN: ${MYSQL_DSN}
+            PG_DSN: ${PG_DSN}
+            MARIA_DSN: ${MARIA_DSN}
+        depends_on:
+            - mysql
+            - postgres
+            - maria
+        tty: true
+        networks:
+            net: {}
+    mysql:
+        image: mysql:5.7
+        ports:
+            - '13306:3306'
+        volumes:
+            - ./tests/runtime/mysql:/var/lib/mysql:rw
+        environment:
+            TZ: ${TZ}
+            MYSQL_ALLOW_EMPTY_PASSWORD: 1
+            MYSQL_USER: ${DB_USER}
+            MYSQL_PASSWORD: ${DB_PASSWORD}
+            MYSQL_DATABASE: testdb
+        networks:
+            net: {}
+    maria:
+        image: mariadb
+        ports:
+            - '23306:3306'
+        volumes:
+            - ./tests/runtime/maria:/var/lib/mysql:rw
+        environment:
+            TZ: ${TZ}
+            MYSQL_ALLOW_EMPTY_PASSWORD: 1
+            MYSQL_USER: ${DB_USER}
+            MYSQL_PASSWORD: ${DB_PASSWORD}
+            MYSQL_DATABASE: testdb
+            MYSQL_INITDB_SKIP_TZINFO: 1
+        networks:
+            net: {}
+    postgres:
+        image: postgres:11
+        ports:
+            - '15432:5432'
+        volumes:
+            - ./tests/runtime/postgres:/var/lib/postgresql/data:rw
+        environment:
+            TZ: ${TZ}
+            PGTZ: ${TZ}
+            POSTGRES_USER: ${DB_USER}
+            POSTGRES_PASSWORD: ${DB_PASSWORD}
+            POSTGRES_DB: testdb
+        networks:
+            net: {}
+
+networks:
+    net: {}
