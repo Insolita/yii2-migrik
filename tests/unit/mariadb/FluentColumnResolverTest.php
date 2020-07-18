@@ -3,12 +3,11 @@
  * Created by solly [11.08.16 5:34]
  */
 
-namespace tests\unit\mysql;
+namespace tests\unit\mariadb;
 
 use Codeception\Specify;
 use Codeception\Verify;
 use insolita\migrik\resolver\FluentColumnResolver;
-use tests\TestCase;
 use Yii;
 
 /**
@@ -17,14 +16,8 @@ use Yii;
 class FluentColumnResolverTest extends \tests\unit\common\FluentColumnResolverTest
 {
     use Specify;
-    /**@var \yii\db\Connection $db**/
-    protected $db;
 
-    protected function setUp()
-    {
-        parent::setUp();
-        $this->db = Yii::$app->mysqldb;
-    }
+    protected $db;
 
     public function testResolveMysqlReal()
     {
@@ -72,5 +65,11 @@ class FluentColumnResolverTest extends \tests\unit\common\FluentColumnResolverTe
             $resolved = $resolver->resolveColumn($field);
             verify($field, $resolved)->equals($expected);
         }
+    }
+
+    protected function setUp()
+    {
+        parent::setUp();
+        $this->db = Yii::$app->mariadb;
     }
 }

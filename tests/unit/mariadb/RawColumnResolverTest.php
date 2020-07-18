@@ -3,7 +3,7 @@
  * Created by solly [11.08.16 5:34]
  */
 
-namespace tests\unit\mysql;
+namespace tests\unit\mariadb;
 
 use Codeception\Specify;
 use Codeception\Verify;
@@ -70,6 +70,6 @@ class RawColumnResolverTest extends \tests\unit\common\RawColumnResolverTest
     protected function setUp()
     {
         parent::setUp();
-        $this->db = Yii::$app->mysqldb;
+        $this->db = Yii::$app->mariadb;
     }
 }

@@ -69,6 +69,7 @@ abstract class BaseColumnResolver implements IMigrationColumnResolver
         if (!$column->comment) {
             $column->comment = $this->defaultCommentsByColumnName($column->name);
         }
+
         $columnTypeMethod = 'resolve' . ucfirst($column->dbType) . 'Type';
         if (StringHelper::startsWith($column->dbType, 'enum(')) {
             $columnTypeMethod = 'resolveEnumType';

@@ -22,7 +22,7 @@ use yii\db\TableSchema;
 class RawColumnResolverTest extends TestCase
 {
     use Specify;
-
+    /**@var \yii\db\Connection $db**/
     protected $db;
 
     public function testClassBehavior()

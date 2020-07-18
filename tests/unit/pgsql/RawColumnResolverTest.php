@@ -14,7 +14,7 @@ use Yii;
 /**
  * @var Verify
  **/
-class PgRawColumnResolverTest extends TestCase
+class RawColumnResolverTest extends TestCase
 {
     use Specify;
 

@@ -88,6 +88,10 @@ class FluentColumnResolver extends BaseColumnResolver
         ) {
             $default = 'defaultExpression("' . $column->defaultValue . '")';
         }
+        if($column->defaultValue === 'current_timestamp()'){
+            //MariaDb fix
+            $default = 'defaultExpression("CURRENT_TIMESTAMP")';
+        }
         return $this->buildString([$type . $size, $nullable, $default, $comment]);
     }
 

@@ -3,7 +3,7 @@
  * Created by solly [11.08.16 5:34]
  */
 
-namespace tests\unit\mysql;
+namespace tests\unit\mariadb;
 
 use Codeception\Specify;
 use Codeception\Verify;
@@ -19,14 +19,8 @@ use yii\db\TableSchema;
 class TableResolverMysqlTest extends TestCase
 {
     use Specify;
-    /**@var \yii\db\Connection $db**/
-    protected $db;
 
-    protected function setUp()
-    {
-        parent::setUp();
-        $this->db = Yii::$app->mysqldb;
-    }
+    protected $db;
 
     public function testGetSchema()
     {
@@ -186,6 +180,12 @@ class TableResolverMysqlTest extends TestCase
                 verify(count($pk))->equals(2);
             }
         );
+    }
+
+    protected function setUp()
+    {
+        parent::setUp();
+        $this->db = Yii::$app->mariadb;
     }
 
 }

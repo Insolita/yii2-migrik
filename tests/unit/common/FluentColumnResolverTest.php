@@ -21,7 +21,7 @@ use yii\db\TableSchema;
 class FluentColumnResolverTest extends TestCase
 {
     use Specify;
-
+    /**@var \yii\db\Connection $db**/
     protected $db;
 
     public function testResolveString()

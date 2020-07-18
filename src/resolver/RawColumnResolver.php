@@ -108,6 +108,10 @@ class RawColumnResolver extends BaseColumnResolver
         ) {
             $default = 'DEFAULT ' . $column->defaultValue;
         }
+        if($column->defaultValue === 'current_timestamp()'){
+            //MariaDb fix
+            $default = 'DEFAULT CURRENT_TIMESTAMP';
+        }
         return $this->buildString([$type, $size, $nullable, $default, $comment]);
     }
 

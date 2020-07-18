@@ -10,12 +10,11 @@ use Codeception\Verify;
 use insolita\migrik\resolver\PgFluentColumnResolver;
 use tests\TestCase;
 use Yii;
-use const PHP_EOL;
 
 /**
  * @var Verify
  **/
-class PgFluentColumnResolverTest extends TestCase
+class FluentColumnResolverTest extends TestCase
 {
     use Specify;
 
