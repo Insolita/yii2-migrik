@@ -89,7 +89,7 @@ abstract class BaseColumnResolver implements IMigrationColumnResolver
 
             return call_user_func([$this, $columnTypeMethod], $column);
         } else {
-            $columnCategory = ArrayHelper::getValue($this->getColumnSchemaBuilder()->categoryMap, $column->type);
+            $columnCategory = ArrayHelper::getValue($this->getColumnSchemaBuilder()->categoryMap, $column->type) ?: 'other';
             \Yii::trace('try to call categoryMethod "resolve'.ucfirst($columnCategory).'"', __METHOD__);
 
             return call_user_func([$this, 'resolve'.ucfirst($columnCategory)], $column);
